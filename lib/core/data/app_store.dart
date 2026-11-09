@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/models/algeria_geo.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 import 'demo_data.dart';
@@ -28,6 +29,9 @@ class AppStore extends ChangeNotifier {
   static const _kLocale = 'orderbox.locale';
   static const _kOnboarding = 'orderbox.onboarding';
   static const _kStoreName = 'orderbox.storeName';
+  static const _kShipping = 'orderbox.shipping.v1';
+  static const _kDeliveryCompanies = 'orderbox.delivery_companies.v1';
+  static const _kDefaultCompany = 'orderbox.default_company.v1';
 
   List<Order> _orders = [];
   List<Product> _products = [];
@@ -36,6 +40,10 @@ class AppStore extends ChangeNotifier {
   bool _onboardingDone = false;
   bool _ready = false;
   String _customStoreName = '';
+  // Fennecly-inspired shipping options: delivery companies + wilaya home/office tariffs
+  List<String> _deliveryCompanies = List<String>.from(AlgeriaGeo.deliveryCompanies);
+  String _defaultDeliveryCompany = 'Yalidine';
+  Map<String, Map<String, double>> _shippingPrices = {}; // wilayaCode -> {home, office}
 
   // ---------------------------------------------------------------------
   // Getters
@@ -52,6 +60,30 @@ class AppStore extends ChangeNotifier {
 
   String storeNameOr(String fallback) =>
       _customStoreName.trim().isEmpty ? fallback : _customStoreName.trim();
+
+  // Shipping options (fennecly: delivery companies + wilaya home/office tariffs)
+  List<String> get deliveryCompanies => List.unmodifiable(_deliveryCompanies);
+  String get defaultDeliveryCompany => _defaultDeliveryCompany;
+
+  double shippingFee(String wilayaCode, String deliveryType) {
+    final row = _shippingPrices[wilayaCode];
+    if (row == null) return deliveryType == 'office' ? 350 : 600;
+    final v = row[deliveryType == 'office' ? 'office' : 'home'];
+    return (v ?? (deliveryType == 'office' ? 350 : 600));
+  }
+
+  Map<String, double> shippingRow(String wilayaCode) {
+    final row = _shippingPrices[wilayaCode];
+    return {
+      'home': row?['home'] ?? 600,
+      'office': row?['office'] ?? 350,
+    };
+  }
+
+  Map<String, Map<String, double>> get shippingPrices => {
+        for (final e in _shippingPrices.entries)
+          e.key: {'home': e.value['home'] ?? 600, 'office': e.value['office'] ?? 350},
+      };
 
   List<Order> get orders {
     final list = [..._orders];
@@ -94,6 +126,7 @@ class AppStore extends ChangeNotifier {
     );
     _onboardingDone = _prefs.getBool(_kOnboarding) ?? false;
     _customStoreName = _prefs.getString(_kStoreName) ?? '';
+    _loadShippingOptions();
 
     final ordersRaw = _prefs.getString(_kOrders);
     if (ordersRaw == null) {
@@ -146,6 +179,92 @@ class AppStore extends ChangeNotifier {
       _kProducts,
       jsonEncode(_products.map((product) => product.toJson()).toList()),
     );
+  }
+
+  void _loadShippingOptions() {
+    final companiesRaw = _prefs.getString(_kDeliveryCompanies);
+    if (companiesRaw != null && companiesRaw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(companiesRaw) as List<dynamic>;
+        final list = decoded.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+        if (list.isNotEmpty) _deliveryCompanies = list;
+      } catch (_) {}
+    }
+    _defaultDeliveryCompany = _prefs.getString(_kDefaultCompany) ?? _defaultDeliveryCompany;
+    if (!_deliveryCompanies.contains(_defaultDeliveryCompany) && _deliveryCompanies.isNotEmpty) {
+      _defaultDeliveryCompany = _deliveryCompanies.first;
+    }
+    final shippingRaw = _prefs.getString(_kShipping);
+    _shippingPrices = {};
+    if (shippingRaw != null && shippingRaw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(shippingRaw) as Map<String, dynamic>;
+        for (final e in decoded.entries) {
+          final v = e.value as Map<String, dynamic>?;
+          if (v == null) continue;
+          _shippingPrices[e.key] = {
+            'home': (v['home'] as num?)?.toDouble() ?? 600,
+            'office': (v['office'] as num?)?.toDouble() ?? 350,
+          };
+        }
+      } catch (_) {}
+    }
+    _ensureAllWilayaPrices();
+  }
+
+  void _ensureAllWilayaPrices() {
+    for (var i = 1; i <= 58; i++) {
+      final code = i.toString().padLeft(2, '0');
+      _shippingPrices.putIfAbsent(code, () => {'home': 600.0, 'office': 350.0});
+    }
+  }
+
+  void _persistShippingOptions() {
+    _prefs.setString(_kDeliveryCompanies, jsonEncode(_deliveryCompanies));
+    _prefs.setString(_kDefaultCompany, _defaultDeliveryCompany);
+    _prefs.setString(_kShipping, jsonEncode(_shippingPrices));
+  }
+
+  void setDefaultDeliveryCompany(String name) {
+    if (name.trim().isEmpty) return;
+    _defaultDeliveryCompany = name.trim();
+    _persistShippingOptions();
+    notifyListeners();
+  }
+
+  void setShippingPrice(String wilayaCode, {double? home, double? office}) {
+    final row = Map<String, double>.from(_shippingPrices[wilayaCode] ?? {'home': 600.0, 'office': 350.0});
+    if (home != null) row['home'] = home;
+    if (office != null) row['office'] = office;
+    _shippingPrices[wilayaCode] = row;
+    _persistShippingOptions();
+    notifyListeners();
+  }
+
+  void setAllShippingPrices({required double home, required double office}) {
+    for (var i = 1; i <= 58; i++) {
+      final code = i.toString().padLeft(2, '0');
+      _shippingPrices[code] = {'home': home, 'office': office};
+    }
+    _persistShippingOptions();
+    notifyListeners();
+  }
+
+  void addDeliveryCompany(String name) {
+    final n = name.trim();
+    if (n.isEmpty || _deliveryCompanies.contains(n)) return;
+    _deliveryCompanies.add(n);
+    _persistShippingOptions();
+    notifyListeners();
+  }
+
+  void removeDeliveryCompany(String name) {
+    _deliveryCompanies.remove(name);
+    if (_defaultDeliveryCompany == name && _deliveryCompanies.isNotEmpty) {
+      _defaultDeliveryCompany = _deliveryCompanies.first;
+    }
+    _persistShippingOptions();
+    notifyListeners();
   }
 
   // ---------------------------------------------------------------------

@@ -1,4 +1,4 @@
-class Wilaya {
+﻿class Wilaya {
   const Wilaya(this.code, this.fr, this.ar);
 
   final String code;

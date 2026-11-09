@@ -13,6 +13,7 @@ import '../../core/widgets/confirm_dialog.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/soft_card.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import 'shipping/shipping_options_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -279,6 +280,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
+                    _SettingsTile(
+                      icon: Icons.local_shipping_rounded,
+                      color: scheme.primary,
+                      title: l10n.isArabic ? 'خيارات الشحن' : 'Options de livraison',
+                      body: l10n.isArabic
+                          ? 'شركات التوصيل وأسعار الولايات (منزل/مكتب) — من fennecly'
+                          : 'Sociétés, tarifs wilaya (domicile/bureau) — import fennecly',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ShippingOptionsScreen(),
+                        ),
+                      ),
+                    ),
+                    Divider(color: scheme.outlineVariant, height: 1),
                     _SettingsTile(
                       icon: Icons.restart_alt_rounded,
                       color: scheme.primary,

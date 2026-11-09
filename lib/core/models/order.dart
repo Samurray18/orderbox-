@@ -52,6 +52,10 @@ class Order {
     required this.status,
     required this.createdAt,
     this.notes = '',
+    this.deliveryCompany = '',
+    this.deliveryType = 'home',
+    this.trackingNumber = '',
+    this.codPaidByCompany = false,
   });
 
   final String id;
@@ -72,6 +76,11 @@ class Order {
   final OrderStatus status;
   final DateTime createdAt;
   final String notes;
+  // Fennecly-inspired shipping options
+  final String deliveryCompany;
+  final String deliveryType; // home | office (stopdesk)
+  final String trackingNumber;
+  final bool codPaidByCompany;
 
   double get subtotal => unitPrice * quantity;
 
@@ -107,6 +116,10 @@ class Order {
     OrderStatus? status,
     DateTime? createdAt,
     String? notes,
+    String? deliveryCompany,
+    String? deliveryType,
+    String? trackingNumber,
+    bool? codPaidByCompany,
   }) {
     return Order(
       id: id,
@@ -127,6 +140,10 @@ class Order {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       notes: notes ?? this.notes,
+      deliveryCompany: deliveryCompany ?? this.deliveryCompany,
+      deliveryType: deliveryType ?? this.deliveryType,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
+      codPaidByCompany: codPaidByCompany ?? this.codPaidByCompany,
     );
   }
 
@@ -149,6 +166,10 @@ class Order {
     'status': status.id,
     'createdAt': createdAt.toIso8601String(),
     'notes': notes,
+    'deliveryCompany': deliveryCompany,
+    'deliveryType': deliveryType,
+    'trackingNumber': trackingNumber,
+    'codPaidByCompany': codPaidByCompany,
   };
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -173,6 +194,10 @@ class Order {
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
       notes: json['notes'] as String? ?? '',
+      deliveryCompany: json['deliveryCompany'] as String? ?? '',
+      deliveryType: json['deliveryType'] as String? ?? 'home',
+      trackingNumber: json['trackingNumber'] as String? ?? '',
+      codPaidByCompany: json['codPaidByCompany'] as bool? ?? false,
     );
   }
 }

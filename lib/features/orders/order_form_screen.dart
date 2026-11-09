@@ -7,6 +7,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/models/order.dart';
 import '../../core/models/product.dart';
 import '../../core/models/wilaya.dart';
+import '../../domain/models/algeria_geo.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
@@ -42,11 +43,15 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   late final TextEditingController _quantityController;
   late final TextEditingController _priceController;
   late final TextEditingController _deliveryController;
+  late final TextEditingController _trackingController;
 
   Order? _existing;
   String? _wilayaCode;
   String? _productId;
   OrderStatus _status = OrderStatus.newOrder;
+  String _deliveryCompany = 'Yalidine';
+  String _deliveryType = 'home'; // home | office
+  bool _codPaidByCompany = false;
   bool _saving = false;
 
   bool get _isEditing => widget.orderId != null;
@@ -83,10 +88,16 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _deliveryController = TextEditingController(
       text: (_existing?.deliveryPrice ?? 500).toStringAsFixed(0),
     );
+    _trackingController = TextEditingController(text: _existing?.trackingNumber ?? '');
 
     _wilayaCode = _existing?.wilayaCode;
     _productId = _existing?.productId;
     _status = _existing?.status ?? OrderStatus.newOrder;
+    _deliveryCompany = _existing?.deliveryCompany.isNotEmpty == true
+        ? _existing!.deliveryCompany
+        : (store.deliveryCompanies.isNotEmpty ? store.defaultDeliveryCompany : 'Yalidine');
+    _deliveryType = _existing?.deliveryType ?? 'home';
+    _codPaidByCompany = _existing?.codPaidByCompany ?? false;
   }
 
   @override
@@ -99,6 +110,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _quantityController.dispose();
     _priceController.dispose();
     _deliveryController.dispose();
+    _trackingController.dispose();
     super.dispose();
   }
 
@@ -123,7 +135,37 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       builder: (context) => const _WilayaPickerSheet(),
     );
     if (selected != null) {
-      setState(() => _wilayaCode = selected.code);
+      final store = context.read<AppStore>();
+      final fee = store.shippingFee(selected.code, _deliveryType);
+      setState(() {
+        _wilayaCode = selected.code;
+        _deliveryController.text = fee.toStringAsFixed(0);
+      });
+    }
+  }
+
+  void _applyDeliveryFee() {
+    final code = _wilayaCode;
+    if (code == null) return;
+    final fee = context.read<AppStore>().shippingFee(code, _deliveryType);
+    setState(() => _deliveryController.text = fee.toStringAsFixed(0));
+  }
+
+  Future<void> _pickCommune() async {
+    final codeStr = _wilayaCode;
+    if (codeStr == null) return;
+    final code = int.tryParse(codeStr) ?? 0;
+    if (code <= 0) return;
+    final l10n = AppLocalizations.of(context);
+    final communes = AlgeriaGeo.communesOf(code);
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => _CommunePickerSheet(communes: communes, isArabic: l10n.isArabic),
+    );
+    if (selected != null) {
+      setState(() => _communeController.text = selected);
     }
   }
 
@@ -219,9 +261,13 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       unitPrice: unitPrice,
       costPrice: product.cost,
       deliveryPrice: delivery,
-      status: _isEditing ? _status : _status,
+      status: _status,
       createdAt: _existing?.createdAt ?? DateTime.now(),
       notes: _notesController.text.trim(),
+      deliveryCompany: _deliveryCompany,
+      deliveryType: _deliveryType,
+      trackingNumber: _trackingController.text.trim(),
+      codPaidByCompany: _codPaidByCompany,
     );
 
     if (_isEditing) {
@@ -334,12 +380,28 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                   ),
                 ),
               const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                controller: _communeController,
-                label: l10n.commune,
-                hint: l10n.communeHint,
-                prefixIcon: Icons.map_rounded,
-                textInputAction: TextInputAction.next,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      controller: _communeController,
+                      label: l10n.commune,
+                      hint: l10n.communeHint,
+                      prefixIcon: Icons.map_rounded,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: IconButton.filledTonal(
+                      tooltip: l10n.isArabic ? 'اختر البلدية' : 'Choisir commune',
+                      onPressed: _wilayaCode == null ? null : _pickCommune,
+                      icon: const Icon(Icons.list_alt_rounded),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
@@ -451,20 +513,70 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
+              SectionHeader(title: l10n.isArabic ? 'خيارات الشحن (fennecly)' : 'Options de livraison (fennecly)'),
+              const SizedBox(height: AppSpacing.xs),
+              DropdownButtonFormField<String>(
+                initialValue: context.read<AppStore>().deliveryCompanies.contains(_deliveryCompany)
+                    ? _deliveryCompany
+                    : (context.read<AppStore>().deliveryCompanies.isNotEmpty
+                        ? context.read<AppStore>().deliveryCompanies.first
+                        : null),
+                decoration: InputDecoration(
+                  labelText: l10n.isArabic ? 'شركة التوصيل' : 'Société de livraison',
+                  prefixIcon: const Icon(Icons.local_shipping_rounded, size: 22),
+                ),
+                items: context
+                    .read<AppStore>()
+                    .deliveryCompanies
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) => setState(() => _deliveryCompany = v ?? _deliveryCompany),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.isArabic ? 'نوع التوصيل' : 'Type de livraison',
+                  style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 6),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(value: 'home', label: Text(l10n.isArabic ? 'المنزل' : 'Domicile'), icon: const Icon(Icons.home_rounded)),
+                  ButtonSegment(value: 'office', label: Text(l10n.isArabic ? 'المكتب' : 'Bureau'), icon: const Icon(Icons.store_rounded)),
+                ],
+                selected: {_deliveryType},
+                onSelectionChanged: (s) {
+                  setState(() => _deliveryType = s.first);
+                  _applyDeliveryFee();
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      controller: _deliveryController,
+                      label: l10n.deliveryPrice,
+                      prefixIcon: Icons.payments_rounded,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+                      textInputAction: TextInputAction.next,
+                      validator: (value) => Validators.amount(value, l10n),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: l10n.isArabic ? 'تعبئة السعر' : 'Auto-tarif',
+                    onPressed: _applyDeliveryFee,
+                    icon: const Icon(Icons.auto_fix_high_rounded),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
-                controller: _deliveryController,
-                label: l10n.deliveryPrice,
-                prefixIcon: Icons.local_shipping_rounded,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
+                controller: _trackingController,
+                label: l10n.isArabic ? 'رقم التتبع (اختياري)' : 'Numéro de suivi (optionnel)',
+                prefixIcon: Icons.qr_code_2_rounded,
                 textInputAction: TextInputAction.next,
-                validator: (value) => Validators.amount(value, l10n),
-                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AppSpacing.lg),
               SectionHeader(title: l10n.status),
@@ -896,6 +1008,73 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                 },
                 icon: const Icon(Icons.add_rounded),
                 label: Text(l10n.addProduct),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CommunePickerSheet extends StatefulWidget {
+  const _CommunePickerSheet({required this.communes, required this.isArabic});
+  final List<String> communes;
+  final bool isArabic;
+
+  @override
+  State<_CommunePickerSheet> createState() => _CommunePickerSheetState();
+}
+
+class _CommunePickerSheetState extends State<_CommunePickerSheet> {
+  String _q = '';
+  final TextEditingController _c = TextEditingController();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = widget.communes.where((c) {
+      if (_q.trim().isEmpty) return true;
+      return c.toLowerCase().contains(_q.trim().toLowerCase());
+    }).toList();
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.75,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            SheetHeader(
+              title: widget.isArabic ? 'اختر البلدية' : 'Choisir une commune',
+              subtitle: widget.isArabic ? 'بيانات fennecly / الجزائر' : 'Données fennecly / Algérie',
+              icon: Icons.map_rounded,
+              trailing: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+            AppTextField(
+              controller: _c,
+              label: AppLocalizations.of(context).search,
+              hint: widget.isArabic ? 'بحث...' : 'Rechercher...',
+              prefixIcon: Icons.search_rounded,
+              onChanged: (v) => setState(() => _q = v),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filtered.length,
+                itemBuilder: (context, i) => ListTile(
+                  title: Text(filtered[i]),
+                  onTap: () {
+                    AppHaptics.select();
+                    Navigator.pop(context, filtered[i]);
+                  },
+                ),
               ),
             ),
           ],

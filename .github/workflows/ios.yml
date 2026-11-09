@@ -1,0 +1,61 @@
+name: iOS Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-ios-unsigned:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Runner.app not found at $APP_PATH"
+            ls -la build/ios/iphoneos || true
+            exit 1
+          fi
+          # Verify expected binary exists
+          test -f "$APP_PATH/Runner"
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/Runner.app
+          rm -f OrderBoxDZ-unsigned.ipa
+          zip -qry OrderBoxDZ-unsigned.ipa Payload
+          # Basic structure check
+          unzip -l OrderBoxDZ-unsigned.ipa | grep "Payload/Runner.app/Runner"
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrderBoxDZ-unsigned-ipa
+          path: OrderBoxDZ-unsigned.ipa
+          if-no-files-found: error

@@ -113,6 +113,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _toggleCodPaid() async {
+    final order = _order;
+    if (order == null) return;
+    context.read<AppStore>().updateOrder(order.copyWith(codPaidByCompany: !order.codPaidByCompany));
+    AppHaptics.select();
+    final l10n = AppLocalizations.of(context);
+    if (!mounted) return;
+    showAppSnackBar(context, l10n.isArabic ? 'تم تحديث الدفع (COD)' : 'Paiement COD mis à jour');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_missing) {
@@ -351,6 +361,68 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
+                  SectionHeader(title: l10n.isArabic ? 'الشحن (fennecly)' : 'Expédition (fennecly)'),
+                  const SizedBox(height: AppSpacing.xs),
+                  SoftCard(
+                    child: Column(
+                      children: [
+                        _InfoRow(
+                          icon: Icons.local_shipping_rounded,
+                          label: l10n.isArabic ? 'شركة التوصيل' : 'Société',
+                          value: order.deliveryCompany.isEmpty ? '-' : order.deliveryCompany,
+                        ),
+                        _InfoRow(
+                          icon: order.deliveryType == 'office' ? Icons.store_rounded : Icons.home_rounded,
+                          label: l10n.isArabic ? 'نوع التوصيل' : 'Type',
+                          value: order.deliveryType == 'office'
+                              ? (l10n.isArabic ? 'مكتب (Stopdesk)' : 'Bureau (Stopdesk)')
+                              : (l10n.isArabic ? 'منزل' : 'Domicile'),
+                        ),
+                        _InfoRow(
+                          icon: Icons.payments_rounded,
+                          label: l10n.deliveryPrice,
+                          value: formatCurrency(context, order.deliveryPrice),
+                        ),
+                        _InfoRow(
+                          icon: Icons.qr_code_2_rounded,
+                          label: l10n.isArabic ? 'رقم التتبع' : 'Suivi',
+                          value: order.trackingNumber.isEmpty ? '-' : order.trackingNumber,
+                          isLast: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SoftCard(
+                    child: Row(
+                      children: [
+                        Icon(
+                          order.codPaidByCompany ? Icons.verified_rounded : Icons.hourglass_bottom_rounded,
+                          color: order.codPaidByCompany ? AppColors.mintDeep : scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.isArabic ? 'الدفع عند الاستلام — مستحق عند شركة التوصيل' : 'COD — dû par la société de livraison',
+                                style: texts.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                order.codPaidByCompany
+                                    ? (l10n.isArabic ? 'تم استلام المبلغ من الشركة' : 'Payé par la société')
+                                    : (l10n.isArabic ? 'لم يُستلم بعد' : 'Non reçu'),
+                                style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(value: order.codPaidByCompany, onChanged: (_) => _toggleCodPaid()),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   SectionHeader(title: l10n.deliveryInfo),
                   const SizedBox(height: AppSpacing.xs),
                   SoftCard(
@@ -370,11 +442,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           icon: Icons.sell_rounded,
                           label: l10n.unitPrice,
                           value: formatCurrency(context, order.unitPrice),
-                        ),
-                        _InfoRow(
-                          icon: Icons.local_shipping_rounded,
-                          label: l10n.deliveryPrice,
-                          value: formatCurrency(context, order.deliveryPrice),
                         ),
                         _InfoRow(
                           icon: Icons.receipt_long_rounded,

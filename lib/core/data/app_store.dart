@@ -335,7 +335,36 @@ class AppStore extends ChangeNotifier {
 
   void updateOrderStatus(Order order, OrderStatus status) {
     if (order.status == status) return;
+    final prev = order.status;
+    // v2 stock rules (idempotent by transition): reduce on Shipped, restore if Returned.
+    final wasOut = prev == OrderStatus.shipped || prev == OrderStatus.delivered;
+    final becomesOut = status == OrderStatus.shipped || status == OrderStatus.delivered;
+    if (!wasOut && becomesOut) {
+      _adjustProductStock(order.productId, -order.quantity);
+    } else if (wasOut && status == OrderStatus.returned) {
+      _adjustProductStock(order.productId, order.quantity);
+    } else if (wasOut && status == OrderStatus.cancelled) {
+      // cancelled after shipment: restore stock (safe default)
+      _adjustProductStock(order.productId, order.quantity);
+    }
     updateOrder(order.copyWith(status: status));
+  }
+
+  void _adjustProductStock(String productId, int delta) {
+    if (productId.isEmpty || delta == 0) return;
+    final i = _products.indexWhere((p) => p.id == productId);
+    if (i == -1) return;
+    final next = _products[i].stock + delta;
+    _products[i] = _products[i].copyWith(stock: next < 0 ? 0 : next);
+    _persistProducts();
+  }
+
+  // COD owed: delivered orders not yet paid by delivery company
+  double codOwedToSeller([Iterable<Order>? list]) {
+    final src = list ?? _orders;
+    return src
+        .where((o) => o.status == OrderStatus.delivered && !o.codPaidByCompany)
+        .fold(0.0, (s, o) => s + o.total);
   }
 
   void deleteOrder(String id) {

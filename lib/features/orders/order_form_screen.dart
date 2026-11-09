@@ -53,6 +53,8 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   String _deliveryType = 'home'; // home | office
   bool _codPaidByCompany = false;
   bool _saving = false;
+  int _riskyReturned = 0;
+  int _riskyNoAnswer = 0;
 
   bool get _isEditing => widget.orderId != null;
 
@@ -98,6 +100,29 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         : (store.deliveryCompanies.isNotEmpty ? store.defaultDeliveryCompany : 'Yalidine');
     _deliveryType = _existing?.deliveryType ?? 'home';
     _codPaidByCompany = _existing?.codPaidByCompany ?? false;
+    _checkRisky(_phoneController.text);
+  }
+
+  void _checkRisky(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 9) {
+      if (_riskyReturned != 0 || _riskyNoAnswer != 0) {
+        setState(() { _riskyReturned = 0; _riskyNoAnswer = 0; });
+      }
+      return;
+    }
+    final store = context.read<AppStore>();
+    var ret = 0, na = 0;
+    for (final o in store.orders) {
+      if (_existing != null && o.id == _existing!.id) continue;
+      final od = o.phone.replaceAll(RegExp(r'\D'), '');
+      if (od.isEmpty || (!digits.endsWith(od.length >= 9 ? od.substring(od.length - 9) : od) && !od.endsWith(digits.length >= 9 ? digits.substring(digits.length - 9) : digits))) continue;
+      if (o.status == OrderStatus.returned) ret++;
+      if (o.status == OrderStatus.noAnswer) na++;
+    }
+    if (ret != _riskyReturned || na != _riskyNoAnswer) {
+      setState(() { _riskyReturned = ret; _riskyNoAnswer = na; });
+    }
   }
 
   @override
@@ -358,7 +383,37 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                 ],
                 textInputAction: TextInputAction.next,
                 validator: (value) => Validators.phone(value, l10n),
+                onChanged: _checkRisky,
               ),
+              if (_riskyReturned > 0 || _riskyNoAnswer > 0) ...[
+                const SizedBox(height: 6),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsetsDirectional.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.isArabic
+                              ? 'عميل محفوف بالمخاطر: مرتجعات $_riskyReturned، بلا رد $_riskyNoAnswer'
+                              : 'Client à risque : $_riskyReturned retour(s), $_riskyNoAnswer sans réponse',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.danger,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               _PickerField(
                 label: l10n.wilaya,

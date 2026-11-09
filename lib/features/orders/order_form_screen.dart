@@ -391,13 +391,13 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                   width: double.infinity,
                   padding: const EdgeInsetsDirectional.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.08),
+                    color: AppColors.red.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
+                    border: Border.all(color: AppColors.red.withValues(alpha: 0.35)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+                      const Icon(Icons.warning_amber_rounded, color: AppColors.red),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -405,7 +405,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                               ? 'عميل محفوف بالمخاطر: مرتجعات $_riskyReturned، بلا رد $_riskyNoAnswer'
                               : 'Client à risque : $_riskyReturned retour(s), $_riskyNoAnswer sans réponse',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.danger,
+                                color: AppColors.red,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),

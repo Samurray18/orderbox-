@@ -1,7 +1,7 @@
 name: orderbox_dz
 description: "OrderBox DZ — a premium order manager for Algerian online sellers."
 publish_to: "none"
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.13.7

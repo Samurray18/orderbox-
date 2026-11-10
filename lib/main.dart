@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'core/data/app_store.dart';
 import 'core/services/fennecly_supabase.dart';
+import 'data/db/app_database.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,10 +14,11 @@ Future<void> main() async {
   try {
     await FenneclySupabase.initialize();
   } catch (_) {
-    // Offline / init failure: app can still run; login/sync will show errors.
+    // Offline / init failure: app can still run locally without account.
   }
   final preferences = await SharedPreferences.getInstance();
-  final store = AppStore(preferences);
+  final db = AppDatabase();
+  final store = AppStore(preferences, db);
   await store.load();
   runApp(
     ChangeNotifierProvider.value(

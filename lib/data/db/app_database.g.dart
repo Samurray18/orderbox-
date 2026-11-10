@@ -10,16 +10,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   $ProductsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -30,36 +26,30 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _buyingCostDzdMeta = const VerificationMeta(
-    'buyingCostDzd',
-  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
   @override
-  late final GeneratedColumn<int> buyingCostDzd = GeneratedColumn<int>(
-    'buying_cost_dzd',
+  late final GeneratedColumn<double> price = GeneratedColumn<double>(
+    'price',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
+    defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _sellingPriceDzdMeta = const VerificationMeta(
-    'sellingPriceDzd',
-  );
+  static const VerificationMeta _costMeta = const VerificationMeta('cost');
   @override
-  late final GeneratedColumn<int> sellingPriceDzd = GeneratedColumn<int>(
-    'selling_price_dzd',
+  late final GeneratedColumn<double> cost = GeneratedColumn<double>(
+    'cost',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
+    defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _stockQtyMeta = const VerificationMeta(
-    'stockQty',
-  );
+  static const VerificationMeta _stockMeta = const VerificationMeta('stock');
   @override
-  late final GeneratedColumn<int> stockQty = GeneratedColumn<int>(
-    'stock_qty',
+  late final GeneratedColumn<int> stock = GeneratedColumn<int>(
+    'stock',
     aliasedName,
     false,
     type: DriftSqlType.int,
@@ -81,9 +71,9 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
-    buyingCostDzd,
-    sellingPriceDzd,
-    stockQty,
+    price,
+    cost,
+    stock,
     createdAt,
   ];
   @override
@@ -100,6 +90,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -109,28 +101,22 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('buying_cost_dzd')) {
+    if (data.containsKey('price')) {
       context.handle(
-        _buyingCostDzdMeta,
-        buyingCostDzd.isAcceptableOrUnknown(
-          data['buying_cost_dzd']!,
-          _buyingCostDzdMeta,
-        ),
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
       );
     }
-    if (data.containsKey('selling_price_dzd')) {
+    if (data.containsKey('cost')) {
       context.handle(
-        _sellingPriceDzdMeta,
-        sellingPriceDzd.isAcceptableOrUnknown(
-          data['selling_price_dzd']!,
-          _sellingPriceDzdMeta,
-        ),
+        _costMeta,
+        cost.isAcceptableOrUnknown(data['cost']!, _costMeta),
       );
     }
-    if (data.containsKey('stock_qty')) {
+    if (data.containsKey('stock')) {
       context.handle(
-        _stockQtyMeta,
-        stockQty.isAcceptableOrUnknown(data['stock_qty']!, _stockQtyMeta),
+        _stockMeta,
+        stock.isAcceptableOrUnknown(data['stock']!, _stockMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -151,24 +137,24 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Product(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      buyingCostDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}buying_cost_dzd'],
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price'],
       )!,
-      sellingPriceDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}selling_price_dzd'],
+      cost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cost'],
       )!,
-      stockQty: attachedDatabase.typeMapping.read(
+      stock: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}stock_qty'],
+        data['${effectivePrefix}stock'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -184,28 +170,28 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
 }
 
 class Product extends DataClass implements Insertable<Product> {
-  final int id;
+  final String id;
   final String name;
-  final int buyingCostDzd;
-  final int sellingPriceDzd;
-  final int stockQty;
+  final double price;
+  final double cost;
+  final int stock;
   final DateTime createdAt;
   const Product({
     required this.id,
     required this.name,
-    required this.buyingCostDzd,
-    required this.sellingPriceDzd,
-    required this.stockQty,
+    required this.price,
+    required this.cost,
+    required this.stock,
     required this.createdAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
-    map['buying_cost_dzd'] = Variable<int>(buyingCostDzd);
-    map['selling_price_dzd'] = Variable<int>(sellingPriceDzd);
-    map['stock_qty'] = Variable<int>(stockQty);
+    map['price'] = Variable<double>(price);
+    map['cost'] = Variable<double>(cost);
+    map['stock'] = Variable<int>(stock);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -214,9 +200,9 @@ class Product extends DataClass implements Insertable<Product> {
     return ProductsCompanion(
       id: Value(id),
       name: Value(name),
-      buyingCostDzd: Value(buyingCostDzd),
-      sellingPriceDzd: Value(sellingPriceDzd),
-      stockQty: Value(stockQty),
+      price: Value(price),
+      cost: Value(cost),
+      stock: Value(stock),
       createdAt: Value(createdAt),
     );
   }
@@ -227,11 +213,11 @@ class Product extends DataClass implements Insertable<Product> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Product(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      buyingCostDzd: serializer.fromJson<int>(json['buyingCostDzd']),
-      sellingPriceDzd: serializer.fromJson<int>(json['sellingPriceDzd']),
-      stockQty: serializer.fromJson<int>(json['stockQty']),
+      price: serializer.fromJson<double>(json['price']),
+      cost: serializer.fromJson<double>(json['cost']),
+      stock: serializer.fromJson<int>(json['stock']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -239,41 +225,37 @@ class Product extends DataClass implements Insertable<Product> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'buyingCostDzd': serializer.toJson<int>(buyingCostDzd),
-      'sellingPriceDzd': serializer.toJson<int>(sellingPriceDzd),
-      'stockQty': serializer.toJson<int>(stockQty),
+      'price': serializer.toJson<double>(price),
+      'cost': serializer.toJson<double>(cost),
+      'stock': serializer.toJson<int>(stock),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
   Product copyWith({
-    int? id,
+    String? id,
     String? name,
-    int? buyingCostDzd,
-    int? sellingPriceDzd,
-    int? stockQty,
+    double? price,
+    double? cost,
+    int? stock,
     DateTime? createdAt,
   }) => Product(
     id: id ?? this.id,
     name: name ?? this.name,
-    buyingCostDzd: buyingCostDzd ?? this.buyingCostDzd,
-    sellingPriceDzd: sellingPriceDzd ?? this.sellingPriceDzd,
-    stockQty: stockQty ?? this.stockQty,
+    price: price ?? this.price,
+    cost: cost ?? this.cost,
+    stock: stock ?? this.stock,
     createdAt: createdAt ?? this.createdAt,
   );
   Product copyWithCompanion(ProductsCompanion data) {
     return Product(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      buyingCostDzd: data.buyingCostDzd.present
-          ? data.buyingCostDzd.value
-          : this.buyingCostDzd,
-      sellingPriceDzd: data.sellingPriceDzd.present
-          ? data.sellingPriceDzd.value
-          : this.sellingPriceDzd,
-      stockQty: data.stockQty.present ? data.stockQty.value : this.stockQty,
+      price: data.price.present ? data.price.value : this.price,
+      cost: data.cost.present ? data.cost.value : this.cost,
+      stock: data.stock.present ? data.stock.value : this.stock,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -283,92 +265,93 @@ class Product extends DataClass implements Insertable<Product> {
     return (StringBuffer('Product(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('buyingCostDzd: $buyingCostDzd, ')
-          ..write('sellingPriceDzd: $sellingPriceDzd, ')
-          ..write('stockQty: $stockQty, ')
+          ..write('price: $price, ')
+          ..write('cost: $cost, ')
+          ..write('stock: $stock, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    buyingCostDzd,
-    sellingPriceDzd,
-    stockQty,
-    createdAt,
-  );
+  int get hashCode => Object.hash(id, name, price, cost, stock, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Product &&
           other.id == this.id &&
           other.name == this.name &&
-          other.buyingCostDzd == this.buyingCostDzd &&
-          other.sellingPriceDzd == this.sellingPriceDzd &&
-          other.stockQty == this.stockQty &&
+          other.price == this.price &&
+          other.cost == this.cost &&
+          other.stock == this.stock &&
           other.createdAt == this.createdAt);
 }
 
 class ProductsCompanion extends UpdateCompanion<Product> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
-  final Value<int> buyingCostDzd;
-  final Value<int> sellingPriceDzd;
-  final Value<int> stockQty;
+  final Value<double> price;
+  final Value<double> cost;
+  final Value<int> stock;
   final Value<DateTime> createdAt;
+  final Value<int> rowid;
   const ProductsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
-    this.buyingCostDzd = const Value.absent(),
-    this.sellingPriceDzd = const Value.absent(),
-    this.stockQty = const Value.absent(),
+    this.price = const Value.absent(),
+    this.cost = const Value.absent(),
+    this.stock = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   ProductsCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
-    this.buyingCostDzd = const Value.absent(),
-    this.sellingPriceDzd = const Value.absent(),
-    this.stockQty = const Value.absent(),
+    this.price = const Value.absent(),
+    this.cost = const Value.absent(),
+    this.stock = const Value.absent(),
     required DateTime createdAt,
-  }) : name = Value(name),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
        createdAt = Value(createdAt);
   static Insertable<Product> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
-    Expression<int>? buyingCostDzd,
-    Expression<int>? sellingPriceDzd,
-    Expression<int>? stockQty,
+    Expression<double>? price,
+    Expression<double>? cost,
+    Expression<int>? stock,
     Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
-      if (buyingCostDzd != null) 'buying_cost_dzd': buyingCostDzd,
-      if (sellingPriceDzd != null) 'selling_price_dzd': sellingPriceDzd,
-      if (stockQty != null) 'stock_qty': stockQty,
+      if (price != null) 'price': price,
+      if (cost != null) 'cost': cost,
+      if (stock != null) 'stock': stock,
       if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   ProductsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
-    Value<int>? buyingCostDzd,
-    Value<int>? sellingPriceDzd,
-    Value<int>? stockQty,
+    Value<double>? price,
+    Value<double>? cost,
+    Value<int>? stock,
     Value<DateTime>? createdAt,
+    Value<int>? rowid,
   }) {
     return ProductsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
-      buyingCostDzd: buyingCostDzd ?? this.buyingCostDzd,
-      sellingPriceDzd: sellingPriceDzd ?? this.sellingPriceDzd,
-      stockQty: stockQty ?? this.stockQty,
+      price: price ?? this.price,
+      cost: cost ?? this.cost,
+      stock: stock ?? this.stock,
       createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -376,22 +359,25 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
-    if (buyingCostDzd.present) {
-      map['buying_cost_dzd'] = Variable<int>(buyingCostDzd.value);
+    if (price.present) {
+      map['price'] = Variable<double>(price.value);
     }
-    if (sellingPriceDzd.present) {
-      map['selling_price_dzd'] = Variable<int>(sellingPriceDzd.value);
+    if (cost.present) {
+      map['cost'] = Variable<double>(cost.value);
     }
-    if (stockQty.present) {
-      map['stock_qty'] = Variable<int>(stockQty.value);
+    if (stock.present) {
+      map['stock'] = Variable<int>(stock.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -401,10 +387,11 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     return (StringBuffer('ProductsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('buyingCostDzd: $buyingCostDzd, ')
-          ..write('sellingPriceDzd: $sellingPriceDzd, ')
-          ..write('stockQty: $stockQty, ')
-          ..write('createdAt: $createdAt')
+          ..write('price: $price, ')
+          ..write('cost: $cost, ')
+          ..write('stock: $stock, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -681,16 +668,24 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
   $OrdersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _referenceMeta = const VerificationMeta(
+    'reference',
+  );
+  @override
+  late final GeneratedColumn<String> reference = GeneratedColumn<String>(
+    'reference',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _customerNameMeta = const VerificationMeta(
     'customerName',
@@ -716,12 +711,37 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     'wilayaCode',
   );
   @override
-  late final GeneratedColumn<int> wilayaCode = GeneratedColumn<int>(
+  late final GeneratedColumn<String> wilayaCode = GeneratedColumn<String>(
     'wilaya_code',
     aliasedName,
     false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _wilayaNameMeta = const VerificationMeta(
+    'wilayaName',
+  );
+  @override
+  late final GeneratedColumn<String> wilayaName = GeneratedColumn<String>(
+    'wilaya_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _wilayaNameArMeta = const VerificationMeta(
+    'wilayaNameAr',
+  );
+  @override
+  late final GeneratedColumn<String> wilayaNameAr = GeneratedColumn<String>(
+    'wilaya_name_ar',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _communeMeta = const VerificationMeta(
     'commune',
@@ -735,12 +755,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _addressNoteMeta = const VerificationMeta(
-    'addressNote',
+  static const VerificationMeta _addressMeta = const VerificationMeta(
+    'address',
   );
   @override
-  late final GeneratedColumn<String> addressNote = GeneratedColumn<String>(
-    'address_note',
+  late final GeneratedColumn<String> address = GeneratedColumn<String>(
+    'address',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -751,12 +771,13 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     'productId',
   );
   @override
-  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> productId = GeneratedColumn<String>(
     'product_id',
     aliasedName,
-    true,
-    type: DriftSqlType.int,
+    false,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _productNameMeta = const VerificationMeta(
     'productName',
@@ -781,65 +802,53 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
-  static const VerificationMeta _unitPriceDzdMeta = const VerificationMeta(
-    'unitPriceDzd',
+  static const VerificationMeta _unitPriceMeta = const VerificationMeta(
+    'unitPrice',
   );
   @override
-  late final GeneratedColumn<int> unitPriceDzd = GeneratedColumn<int>(
-    'unit_price_dzd',
+  late final GeneratedColumn<double> unitPrice = GeneratedColumn<double>(
+    'unit_price',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
+    defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _buyingCostDzdMeta = const VerificationMeta(
-    'buyingCostDzd',
+  static const VerificationMeta _costPriceMeta = const VerificationMeta(
+    'costPrice',
   );
   @override
-  late final GeneratedColumn<int> buyingCostDzd = GeneratedColumn<int>(
-    'buying_cost_dzd',
+  late final GeneratedColumn<double> costPrice = GeneratedColumn<double>(
+    'cost_price',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0),
+    defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _deliveryModeMeta = const VerificationMeta(
-    'deliveryMode',
+  static const VerificationMeta _deliveryPriceMeta = const VerificationMeta(
+    'deliveryPrice',
   );
   @override
-  late final GeneratedColumn<String> deliveryMode = GeneratedColumn<String>(
-    'delivery_mode',
+  late final GeneratedColumn<double> deliveryPrice = GeneratedColumn<double>(
+    'delivery_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _deliveryTypeMeta = const VerificationMeta(
+    'deliveryType',
+  );
+  @override
+  late final GeneratedColumn<String> deliveryType = GeneratedColumn<String>(
+    'delivery_type',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     defaultValue: const Constant('home'),
-  );
-  static const VerificationMeta _deliveryFeeDzdMeta = const VerificationMeta(
-    'deliveryFeeDzd',
-  );
-  @override
-  late final GeneratedColumn<int> deliveryFeeDzd = GeneratedColumn<int>(
-    'delivery_fee_dzd',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _totalDzdMeta = const VerificationMeta(
-    'totalDzd',
-  );
-  @override
-  late final GeneratedColumn<int> totalDzd = GeneratedColumn<int>(
-    'total_dzd',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
   );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
@@ -918,26 +927,28 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    reference,
     customerName,
     phone,
     wilayaCode,
+    wilayaName,
+    wilayaNameAr,
     commune,
-    addressNote,
+    address,
     productId,
     productName,
     quantity,
-    unitPriceDzd,
-    buyingCostDzd,
-    deliveryMode,
-    deliveryFeeDzd,
-    totalDzd,
+    unitPrice,
+    costPrice,
+    deliveryPrice,
+    deliveryType,
     status,
     deliveryCompany,
     trackingNumber,
@@ -960,6 +971,14 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('reference')) {
+      context.handle(
+        _referenceMeta,
+        reference.isAcceptableOrUnknown(data['reference']!, _referenceMeta),
+      );
     }
     if (data.containsKey('customer_name')) {
       context.handle(
@@ -985,8 +1004,21 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         _wilayaCodeMeta,
         wilayaCode.isAcceptableOrUnknown(data['wilaya_code']!, _wilayaCodeMeta),
       );
-    } else if (isInserting) {
-      context.missing(_wilayaCodeMeta);
+    }
+    if (data.containsKey('wilaya_name')) {
+      context.handle(
+        _wilayaNameMeta,
+        wilayaName.isAcceptableOrUnknown(data['wilaya_name']!, _wilayaNameMeta),
+      );
+    }
+    if (data.containsKey('wilaya_name_ar')) {
+      context.handle(
+        _wilayaNameArMeta,
+        wilayaNameAr.isAcceptableOrUnknown(
+          data['wilaya_name_ar']!,
+          _wilayaNameArMeta,
+        ),
+      );
     }
     if (data.containsKey('commune')) {
       context.handle(
@@ -994,13 +1026,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         commune.isAcceptableOrUnknown(data['commune']!, _communeMeta),
       );
     }
-    if (data.containsKey('address_note')) {
+    if (data.containsKey('address')) {
       context.handle(
-        _addressNoteMeta,
-        addressNote.isAcceptableOrUnknown(
-          data['address_note']!,
-          _addressNoteMeta,
-        ),
+        _addressMeta,
+        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
       );
     }
     if (data.containsKey('product_id')) {
@@ -1026,46 +1055,34 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
       );
     }
-    if (data.containsKey('unit_price_dzd')) {
+    if (data.containsKey('unit_price')) {
       context.handle(
-        _unitPriceDzdMeta,
-        unitPriceDzd.isAcceptableOrUnknown(
-          data['unit_price_dzd']!,
-          _unitPriceDzdMeta,
+        _unitPriceMeta,
+        unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta),
+      );
+    }
+    if (data.containsKey('cost_price')) {
+      context.handle(
+        _costPriceMeta,
+        costPrice.isAcceptableOrUnknown(data['cost_price']!, _costPriceMeta),
+      );
+    }
+    if (data.containsKey('delivery_price')) {
+      context.handle(
+        _deliveryPriceMeta,
+        deliveryPrice.isAcceptableOrUnknown(
+          data['delivery_price']!,
+          _deliveryPriceMeta,
         ),
       );
     }
-    if (data.containsKey('buying_cost_dzd')) {
+    if (data.containsKey('delivery_type')) {
       context.handle(
-        _buyingCostDzdMeta,
-        buyingCostDzd.isAcceptableOrUnknown(
-          data['buying_cost_dzd']!,
-          _buyingCostDzdMeta,
+        _deliveryTypeMeta,
+        deliveryType.isAcceptableOrUnknown(
+          data['delivery_type']!,
+          _deliveryTypeMeta,
         ),
-      );
-    }
-    if (data.containsKey('delivery_mode')) {
-      context.handle(
-        _deliveryModeMeta,
-        deliveryMode.isAcceptableOrUnknown(
-          data['delivery_mode']!,
-          _deliveryModeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('delivery_fee_dzd')) {
-      context.handle(
-        _deliveryFeeDzdMeta,
-        deliveryFeeDzd.isAcceptableOrUnknown(
-          data['delivery_fee_dzd']!,
-          _deliveryFeeDzdMeta,
-        ),
-      );
-    }
-    if (data.containsKey('total_dzd')) {
-      context.handle(
-        _totalDzdMeta,
-        totalDzd.isAcceptableOrUnknown(data['total_dzd']!, _totalDzdMeta),
       );
     }
     if (data.containsKey('status')) {
@@ -1120,8 +1137,6 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         _updatedAtMeta,
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
     }
     return context;
   }
@@ -1133,8 +1148,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Order(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
+      )!,
+      reference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference'],
       )!,
       customerName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1145,21 +1164,29 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         data['${effectivePrefix}phone'],
       )!,
       wilayaCode: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}wilaya_code'],
+      )!,
+      wilayaName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}wilaya_name'],
+      )!,
+      wilayaNameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}wilaya_name_ar'],
       )!,
       commune: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}commune'],
       )!,
-      addressNote: attachedDatabase.typeMapping.read(
+      address: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}address_note'],
+        data['${effectivePrefix}address'],
       )!,
       productId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}product_id'],
-      ),
+      )!,
       productName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}product_name'],
@@ -1168,25 +1195,21 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         DriftSqlType.int,
         data['${effectivePrefix}quantity'],
       )!,
-      unitPriceDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}unit_price_dzd'],
+      unitPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_price'],
       )!,
-      buyingCostDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}buying_cost_dzd'],
+      costPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cost_price'],
       )!,
-      deliveryMode: attachedDatabase.typeMapping.read(
+      deliveryPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}delivery_price'],
+      )!,
+      deliveryType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}delivery_mode'],
-      )!,
-      deliveryFeeDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}delivery_fee_dzd'],
-      )!,
-      totalDzd: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}total_dzd'],
+        data['${effectivePrefix}delivery_type'],
       )!,
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1215,7 +1238,7 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -1226,104 +1249,112 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
 }
 
 class Order extends DataClass implements Insertable<Order> {
-  final int id;
+  final String id;
+  final String reference;
   final String customerName;
   final String phone;
-  final int wilayaCode;
+  final String wilayaCode;
+  final String wilayaName;
+  final String wilayaNameAr;
   final String commune;
-  final String addressNote;
-  final int? productId;
+  final String address;
+  final String productId;
   final String productName;
   final int quantity;
-  final int unitPriceDzd;
-  final int buyingCostDzd;
-  final String deliveryMode;
-  final int deliveryFeeDzd;
-  final int totalDzd;
+  final double unitPrice;
+  final double costPrice;
+  final double deliveryPrice;
+  final String deliveryType;
   final String status;
   final String deliveryCompany;
   final String trackingNumber;
   final bool codPaidByCompany;
   final String notes;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const Order({
     required this.id,
+    required this.reference,
     required this.customerName,
     required this.phone,
     required this.wilayaCode,
+    required this.wilayaName,
+    required this.wilayaNameAr,
     required this.commune,
-    required this.addressNote,
-    this.productId,
+    required this.address,
+    required this.productId,
     required this.productName,
     required this.quantity,
-    required this.unitPriceDzd,
-    required this.buyingCostDzd,
-    required this.deliveryMode,
-    required this.deliveryFeeDzd,
-    required this.totalDzd,
+    required this.unitPrice,
+    required this.costPrice,
+    required this.deliveryPrice,
+    required this.deliveryType,
     required this.status,
     required this.deliveryCompany,
     required this.trackingNumber,
     required this.codPaidByCompany,
     required this.notes,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
+    map['reference'] = Variable<String>(reference);
     map['customer_name'] = Variable<String>(customerName);
     map['phone'] = Variable<String>(phone);
-    map['wilaya_code'] = Variable<int>(wilayaCode);
+    map['wilaya_code'] = Variable<String>(wilayaCode);
+    map['wilaya_name'] = Variable<String>(wilayaName);
+    map['wilaya_name_ar'] = Variable<String>(wilayaNameAr);
     map['commune'] = Variable<String>(commune);
-    map['address_note'] = Variable<String>(addressNote);
-    if (!nullToAbsent || productId != null) {
-      map['product_id'] = Variable<int>(productId);
-    }
+    map['address'] = Variable<String>(address);
+    map['product_id'] = Variable<String>(productId);
     map['product_name'] = Variable<String>(productName);
     map['quantity'] = Variable<int>(quantity);
-    map['unit_price_dzd'] = Variable<int>(unitPriceDzd);
-    map['buying_cost_dzd'] = Variable<int>(buyingCostDzd);
-    map['delivery_mode'] = Variable<String>(deliveryMode);
-    map['delivery_fee_dzd'] = Variable<int>(deliveryFeeDzd);
-    map['total_dzd'] = Variable<int>(totalDzd);
+    map['unit_price'] = Variable<double>(unitPrice);
+    map['cost_price'] = Variable<double>(costPrice);
+    map['delivery_price'] = Variable<double>(deliveryPrice);
+    map['delivery_type'] = Variable<String>(deliveryType);
     map['status'] = Variable<String>(status);
     map['delivery_company'] = Variable<String>(deliveryCompany);
     map['tracking_number'] = Variable<String>(trackingNumber);
     map['cod_paid_by_company'] = Variable<bool>(codPaidByCompany);
     map['notes'] = Variable<String>(notes);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
   OrdersCompanion toCompanion(bool nullToAbsent) {
     return OrdersCompanion(
       id: Value(id),
+      reference: Value(reference),
       customerName: Value(customerName),
       phone: Value(phone),
       wilayaCode: Value(wilayaCode),
+      wilayaName: Value(wilayaName),
+      wilayaNameAr: Value(wilayaNameAr),
       commune: Value(commune),
-      addressNote: Value(addressNote),
-      productId: productId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(productId),
+      address: Value(address),
+      productId: Value(productId),
       productName: Value(productName),
       quantity: Value(quantity),
-      unitPriceDzd: Value(unitPriceDzd),
-      buyingCostDzd: Value(buyingCostDzd),
-      deliveryMode: Value(deliveryMode),
-      deliveryFeeDzd: Value(deliveryFeeDzd),
-      totalDzd: Value(totalDzd),
+      unitPrice: Value(unitPrice),
+      costPrice: Value(costPrice),
+      deliveryPrice: Value(deliveryPrice),
+      deliveryType: Value(deliveryType),
       status: Value(status),
       deliveryCompany: Value(deliveryCompany),
       trackingNumber: Value(trackingNumber),
       codPaidByCompany: Value(codPaidByCompany),
       notes: Value(notes),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1333,105 +1364,114 @@ class Order extends DataClass implements Insertable<Order> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Order(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
+      reference: serializer.fromJson<String>(json['reference']),
       customerName: serializer.fromJson<String>(json['customerName']),
       phone: serializer.fromJson<String>(json['phone']),
-      wilayaCode: serializer.fromJson<int>(json['wilayaCode']),
+      wilayaCode: serializer.fromJson<String>(json['wilayaCode']),
+      wilayaName: serializer.fromJson<String>(json['wilayaName']),
+      wilayaNameAr: serializer.fromJson<String>(json['wilayaNameAr']),
       commune: serializer.fromJson<String>(json['commune']),
-      addressNote: serializer.fromJson<String>(json['addressNote']),
-      productId: serializer.fromJson<int?>(json['productId']),
+      address: serializer.fromJson<String>(json['address']),
+      productId: serializer.fromJson<String>(json['productId']),
       productName: serializer.fromJson<String>(json['productName']),
       quantity: serializer.fromJson<int>(json['quantity']),
-      unitPriceDzd: serializer.fromJson<int>(json['unitPriceDzd']),
-      buyingCostDzd: serializer.fromJson<int>(json['buyingCostDzd']),
-      deliveryMode: serializer.fromJson<String>(json['deliveryMode']),
-      deliveryFeeDzd: serializer.fromJson<int>(json['deliveryFeeDzd']),
-      totalDzd: serializer.fromJson<int>(json['totalDzd']),
+      unitPrice: serializer.fromJson<double>(json['unitPrice']),
+      costPrice: serializer.fromJson<double>(json['costPrice']),
+      deliveryPrice: serializer.fromJson<double>(json['deliveryPrice']),
+      deliveryType: serializer.fromJson<String>(json['deliveryType']),
       status: serializer.fromJson<String>(json['status']),
       deliveryCompany: serializer.fromJson<String>(json['deliveryCompany']),
       trackingNumber: serializer.fromJson<String>(json['trackingNumber']),
       codPaidByCompany: serializer.fromJson<bool>(json['codPaidByCompany']),
       notes: serializer.fromJson<String>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
+      'reference': serializer.toJson<String>(reference),
       'customerName': serializer.toJson<String>(customerName),
       'phone': serializer.toJson<String>(phone),
-      'wilayaCode': serializer.toJson<int>(wilayaCode),
+      'wilayaCode': serializer.toJson<String>(wilayaCode),
+      'wilayaName': serializer.toJson<String>(wilayaName),
+      'wilayaNameAr': serializer.toJson<String>(wilayaNameAr),
       'commune': serializer.toJson<String>(commune),
-      'addressNote': serializer.toJson<String>(addressNote),
-      'productId': serializer.toJson<int?>(productId),
+      'address': serializer.toJson<String>(address),
+      'productId': serializer.toJson<String>(productId),
       'productName': serializer.toJson<String>(productName),
       'quantity': serializer.toJson<int>(quantity),
-      'unitPriceDzd': serializer.toJson<int>(unitPriceDzd),
-      'buyingCostDzd': serializer.toJson<int>(buyingCostDzd),
-      'deliveryMode': serializer.toJson<String>(deliveryMode),
-      'deliveryFeeDzd': serializer.toJson<int>(deliveryFeeDzd),
-      'totalDzd': serializer.toJson<int>(totalDzd),
+      'unitPrice': serializer.toJson<double>(unitPrice),
+      'costPrice': serializer.toJson<double>(costPrice),
+      'deliveryPrice': serializer.toJson<double>(deliveryPrice),
+      'deliveryType': serializer.toJson<String>(deliveryType),
       'status': serializer.toJson<String>(status),
       'deliveryCompany': serializer.toJson<String>(deliveryCompany),
       'trackingNumber': serializer.toJson<String>(trackingNumber),
       'codPaidByCompany': serializer.toJson<bool>(codPaidByCompany),
       'notes': serializer.toJson<String>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
   Order copyWith({
-    int? id,
+    String? id,
+    String? reference,
     String? customerName,
     String? phone,
-    int? wilayaCode,
+    String? wilayaCode,
+    String? wilayaName,
+    String? wilayaNameAr,
     String? commune,
-    String? addressNote,
-    Value<int?> productId = const Value.absent(),
+    String? address,
+    String? productId,
     String? productName,
     int? quantity,
-    int? unitPriceDzd,
-    int? buyingCostDzd,
-    String? deliveryMode,
-    int? deliveryFeeDzd,
-    int? totalDzd,
+    double? unitPrice,
+    double? costPrice,
+    double? deliveryPrice,
+    String? deliveryType,
     String? status,
     String? deliveryCompany,
     String? trackingNumber,
     bool? codPaidByCompany,
     String? notes,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Order(
     id: id ?? this.id,
+    reference: reference ?? this.reference,
     customerName: customerName ?? this.customerName,
     phone: phone ?? this.phone,
     wilayaCode: wilayaCode ?? this.wilayaCode,
+    wilayaName: wilayaName ?? this.wilayaName,
+    wilayaNameAr: wilayaNameAr ?? this.wilayaNameAr,
     commune: commune ?? this.commune,
-    addressNote: addressNote ?? this.addressNote,
-    productId: productId.present ? productId.value : this.productId,
+    address: address ?? this.address,
+    productId: productId ?? this.productId,
     productName: productName ?? this.productName,
     quantity: quantity ?? this.quantity,
-    unitPriceDzd: unitPriceDzd ?? this.unitPriceDzd,
-    buyingCostDzd: buyingCostDzd ?? this.buyingCostDzd,
-    deliveryMode: deliveryMode ?? this.deliveryMode,
-    deliveryFeeDzd: deliveryFeeDzd ?? this.deliveryFeeDzd,
-    totalDzd: totalDzd ?? this.totalDzd,
+    unitPrice: unitPrice ?? this.unitPrice,
+    costPrice: costPrice ?? this.costPrice,
+    deliveryPrice: deliveryPrice ?? this.deliveryPrice,
+    deliveryType: deliveryType ?? this.deliveryType,
     status: status ?? this.status,
     deliveryCompany: deliveryCompany ?? this.deliveryCompany,
     trackingNumber: trackingNumber ?? this.trackingNumber,
     codPaidByCompany: codPaidByCompany ?? this.codPaidByCompany,
     notes: notes ?? this.notes,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Order copyWithCompanion(OrdersCompanion data) {
     return Order(
       id: data.id.present ? data.id.value : this.id,
+      reference: data.reference.present ? data.reference.value : this.reference,
       customerName: data.customerName.present
           ? data.customerName.value
           : this.customerName,
@@ -1439,28 +1479,27 @@ class Order extends DataClass implements Insertable<Order> {
       wilayaCode: data.wilayaCode.present
           ? data.wilayaCode.value
           : this.wilayaCode,
+      wilayaName: data.wilayaName.present
+          ? data.wilayaName.value
+          : this.wilayaName,
+      wilayaNameAr: data.wilayaNameAr.present
+          ? data.wilayaNameAr.value
+          : this.wilayaNameAr,
       commune: data.commune.present ? data.commune.value : this.commune,
-      addressNote: data.addressNote.present
-          ? data.addressNote.value
-          : this.addressNote,
+      address: data.address.present ? data.address.value : this.address,
       productId: data.productId.present ? data.productId.value : this.productId,
       productName: data.productName.present
           ? data.productName.value
           : this.productName,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
-      unitPriceDzd: data.unitPriceDzd.present
-          ? data.unitPriceDzd.value
-          : this.unitPriceDzd,
-      buyingCostDzd: data.buyingCostDzd.present
-          ? data.buyingCostDzd.value
-          : this.buyingCostDzd,
-      deliveryMode: data.deliveryMode.present
-          ? data.deliveryMode.value
-          : this.deliveryMode,
-      deliveryFeeDzd: data.deliveryFeeDzd.present
-          ? data.deliveryFeeDzd.value
-          : this.deliveryFeeDzd,
-      totalDzd: data.totalDzd.present ? data.totalDzd.value : this.totalDzd,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      costPrice: data.costPrice.present ? data.costPrice.value : this.costPrice,
+      deliveryPrice: data.deliveryPrice.present
+          ? data.deliveryPrice.value
+          : this.deliveryPrice,
+      deliveryType: data.deliveryType.present
+          ? data.deliveryType.value
+          : this.deliveryType,
       status: data.status.present ? data.status.value : this.status,
       deliveryCompany: data.deliveryCompany.present
           ? data.deliveryCompany.value
@@ -1481,19 +1520,21 @@ class Order extends DataClass implements Insertable<Order> {
   String toString() {
     return (StringBuffer('Order(')
           ..write('id: $id, ')
+          ..write('reference: $reference, ')
           ..write('customerName: $customerName, ')
           ..write('phone: $phone, ')
           ..write('wilayaCode: $wilayaCode, ')
+          ..write('wilayaName: $wilayaName, ')
+          ..write('wilayaNameAr: $wilayaNameAr, ')
           ..write('commune: $commune, ')
-          ..write('addressNote: $addressNote, ')
+          ..write('address: $address, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
           ..write('quantity: $quantity, ')
-          ..write('unitPriceDzd: $unitPriceDzd, ')
-          ..write('buyingCostDzd: $buyingCostDzd, ')
-          ..write('deliveryMode: $deliveryMode, ')
-          ..write('deliveryFeeDzd: $deliveryFeeDzd, ')
-          ..write('totalDzd: $totalDzd, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('costPrice: $costPrice, ')
+          ..write('deliveryPrice: $deliveryPrice, ')
+          ..write('deliveryType: $deliveryType, ')
           ..write('status: $status, ')
           ..write('deliveryCompany: $deliveryCompany, ')
           ..write('trackingNumber: $trackingNumber, ')
@@ -1508,19 +1549,21 @@ class Order extends DataClass implements Insertable<Order> {
   @override
   int get hashCode => Object.hashAll([
     id,
+    reference,
     customerName,
     phone,
     wilayaCode,
+    wilayaName,
+    wilayaNameAr,
     commune,
-    addressNote,
+    address,
     productId,
     productName,
     quantity,
-    unitPriceDzd,
-    buyingCostDzd,
-    deliveryMode,
-    deliveryFeeDzd,
-    totalDzd,
+    unitPrice,
+    costPrice,
+    deliveryPrice,
+    deliveryType,
     status,
     deliveryCompany,
     trackingNumber,
@@ -1534,19 +1577,21 @@ class Order extends DataClass implements Insertable<Order> {
       identical(this, other) ||
       (other is Order &&
           other.id == this.id &&
+          other.reference == this.reference &&
           other.customerName == this.customerName &&
           other.phone == this.phone &&
           other.wilayaCode == this.wilayaCode &&
+          other.wilayaName == this.wilayaName &&
+          other.wilayaNameAr == this.wilayaNameAr &&
           other.commune == this.commune &&
-          other.addressNote == this.addressNote &&
+          other.address == this.address &&
           other.productId == this.productId &&
           other.productName == this.productName &&
           other.quantity == this.quantity &&
-          other.unitPriceDzd == this.unitPriceDzd &&
-          other.buyingCostDzd == this.buyingCostDzd &&
-          other.deliveryMode == this.deliveryMode &&
-          other.deliveryFeeDzd == this.deliveryFeeDzd &&
-          other.totalDzd == this.totalDzd &&
+          other.unitPrice == this.unitPrice &&
+          other.costPrice == this.costPrice &&
+          other.deliveryPrice == this.deliveryPrice &&
+          other.deliveryType == this.deliveryType &&
           other.status == this.status &&
           other.deliveryCompany == this.deliveryCompany &&
           other.trackingNumber == this.trackingNumber &&
@@ -1557,42 +1602,47 @@ class Order extends DataClass implements Insertable<Order> {
 }
 
 class OrdersCompanion extends UpdateCompanion<Order> {
-  final Value<int> id;
+  final Value<String> id;
+  final Value<String> reference;
   final Value<String> customerName;
   final Value<String> phone;
-  final Value<int> wilayaCode;
+  final Value<String> wilayaCode;
+  final Value<String> wilayaName;
+  final Value<String> wilayaNameAr;
   final Value<String> commune;
-  final Value<String> addressNote;
-  final Value<int?> productId;
+  final Value<String> address;
+  final Value<String> productId;
   final Value<String> productName;
   final Value<int> quantity;
-  final Value<int> unitPriceDzd;
-  final Value<int> buyingCostDzd;
-  final Value<String> deliveryMode;
-  final Value<int> deliveryFeeDzd;
-  final Value<int> totalDzd;
+  final Value<double> unitPrice;
+  final Value<double> costPrice;
+  final Value<double> deliveryPrice;
+  final Value<String> deliveryType;
   final Value<String> status;
   final Value<String> deliveryCompany;
   final Value<String> trackingNumber;
   final Value<bool> codPaidByCompany;
   final Value<String> notes;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
   const OrdersCompanion({
     this.id = const Value.absent(),
+    this.reference = const Value.absent(),
     this.customerName = const Value.absent(),
     this.phone = const Value.absent(),
     this.wilayaCode = const Value.absent(),
+    this.wilayaName = const Value.absent(),
+    this.wilayaNameAr = const Value.absent(),
     this.commune = const Value.absent(),
-    this.addressNote = const Value.absent(),
+    this.address = const Value.absent(),
     this.productId = const Value.absent(),
     this.productName = const Value.absent(),
     this.quantity = const Value.absent(),
-    this.unitPriceDzd = const Value.absent(),
-    this.buyingCostDzd = const Value.absent(),
-    this.deliveryMode = const Value.absent(),
-    this.deliveryFeeDzd = const Value.absent(),
-    this.totalDzd = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.costPrice = const Value.absent(),
+    this.deliveryPrice = const Value.absent(),
+    this.deliveryType = const Value.absent(),
     this.status = const Value.absent(),
     this.deliveryCompany = const Value.absent(),
     this.trackingNumber = const Value.absent(),
@@ -1600,50 +1650,55 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   OrdersCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
+    this.reference = const Value.absent(),
     required String customerName,
     required String phone,
-    required int wilayaCode,
+    this.wilayaCode = const Value.absent(),
+    this.wilayaName = const Value.absent(),
+    this.wilayaNameAr = const Value.absent(),
     this.commune = const Value.absent(),
-    this.addressNote = const Value.absent(),
+    this.address = const Value.absent(),
     this.productId = const Value.absent(),
     required String productName,
     this.quantity = const Value.absent(),
-    this.unitPriceDzd = const Value.absent(),
-    this.buyingCostDzd = const Value.absent(),
-    this.deliveryMode = const Value.absent(),
-    this.deliveryFeeDzd = const Value.absent(),
-    this.totalDzd = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.costPrice = const Value.absent(),
+    this.deliveryPrice = const Value.absent(),
+    this.deliveryType = const Value.absent(),
     this.status = const Value.absent(),
     this.deliveryCompany = const Value.absent(),
     this.trackingNumber = const Value.absent(),
     this.codPaidByCompany = const Value.absent(),
     this.notes = const Value.absent(),
     required DateTime createdAt,
-    required DateTime updatedAt,
-  }) : customerName = Value(customerName),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       customerName = Value(customerName),
        phone = Value(phone),
-       wilayaCode = Value(wilayaCode),
        productName = Value(productName),
-       createdAt = Value(createdAt),
-       updatedAt = Value(updatedAt);
+       createdAt = Value(createdAt);
   static Insertable<Order> custom({
-    Expression<int>? id,
+    Expression<String>? id,
+    Expression<String>? reference,
     Expression<String>? customerName,
     Expression<String>? phone,
-    Expression<int>? wilayaCode,
+    Expression<String>? wilayaCode,
+    Expression<String>? wilayaName,
+    Expression<String>? wilayaNameAr,
     Expression<String>? commune,
-    Expression<String>? addressNote,
-    Expression<int>? productId,
+    Expression<String>? address,
+    Expression<String>? productId,
     Expression<String>? productName,
     Expression<int>? quantity,
-    Expression<int>? unitPriceDzd,
-    Expression<int>? buyingCostDzd,
-    Expression<String>? deliveryMode,
-    Expression<int>? deliveryFeeDzd,
-    Expression<int>? totalDzd,
+    Expression<double>? unitPrice,
+    Expression<double>? costPrice,
+    Expression<double>? deliveryPrice,
+    Expression<String>? deliveryType,
     Expression<String>? status,
     Expression<String>? deliveryCompany,
     Expression<String>? trackingNumber,
@@ -1651,22 +1706,25 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (reference != null) 'reference': reference,
       if (customerName != null) 'customer_name': customerName,
       if (phone != null) 'phone': phone,
       if (wilayaCode != null) 'wilaya_code': wilayaCode,
+      if (wilayaName != null) 'wilaya_name': wilayaName,
+      if (wilayaNameAr != null) 'wilaya_name_ar': wilayaNameAr,
       if (commune != null) 'commune': commune,
-      if (addressNote != null) 'address_note': addressNote,
+      if (address != null) 'address': address,
       if (productId != null) 'product_id': productId,
       if (productName != null) 'product_name': productName,
       if (quantity != null) 'quantity': quantity,
-      if (unitPriceDzd != null) 'unit_price_dzd': unitPriceDzd,
-      if (buyingCostDzd != null) 'buying_cost_dzd': buyingCostDzd,
-      if (deliveryMode != null) 'delivery_mode': deliveryMode,
-      if (deliveryFeeDzd != null) 'delivery_fee_dzd': deliveryFeeDzd,
-      if (totalDzd != null) 'total_dzd': totalDzd,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (costPrice != null) 'cost_price': costPrice,
+      if (deliveryPrice != null) 'delivery_price': deliveryPrice,
+      if (deliveryType != null) 'delivery_type': deliveryType,
       if (status != null) 'status': status,
       if (deliveryCompany != null) 'delivery_company': deliveryCompany,
       if (trackingNumber != null) 'tracking_number': trackingNumber,
@@ -1674,47 +1732,53 @@ class OrdersCompanion extends UpdateCompanion<Order> {
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   OrdersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
+    Value<String>? reference,
     Value<String>? customerName,
     Value<String>? phone,
-    Value<int>? wilayaCode,
+    Value<String>? wilayaCode,
+    Value<String>? wilayaName,
+    Value<String>? wilayaNameAr,
     Value<String>? commune,
-    Value<String>? addressNote,
-    Value<int?>? productId,
+    Value<String>? address,
+    Value<String>? productId,
     Value<String>? productName,
     Value<int>? quantity,
-    Value<int>? unitPriceDzd,
-    Value<int>? buyingCostDzd,
-    Value<String>? deliveryMode,
-    Value<int>? deliveryFeeDzd,
-    Value<int>? totalDzd,
+    Value<double>? unitPrice,
+    Value<double>? costPrice,
+    Value<double>? deliveryPrice,
+    Value<String>? deliveryType,
     Value<String>? status,
     Value<String>? deliveryCompany,
     Value<String>? trackingNumber,
     Value<bool>? codPaidByCompany,
     Value<String>? notes,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
+    Value<int>? rowid,
   }) {
     return OrdersCompanion(
       id: id ?? this.id,
+      reference: reference ?? this.reference,
       customerName: customerName ?? this.customerName,
       phone: phone ?? this.phone,
       wilayaCode: wilayaCode ?? this.wilayaCode,
+      wilayaName: wilayaName ?? this.wilayaName,
+      wilayaNameAr: wilayaNameAr ?? this.wilayaNameAr,
       commune: commune ?? this.commune,
-      addressNote: addressNote ?? this.addressNote,
+      address: address ?? this.address,
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
       quantity: quantity ?? this.quantity,
-      unitPriceDzd: unitPriceDzd ?? this.unitPriceDzd,
-      buyingCostDzd: buyingCostDzd ?? this.buyingCostDzd,
-      deliveryMode: deliveryMode ?? this.deliveryMode,
-      deliveryFeeDzd: deliveryFeeDzd ?? this.deliveryFeeDzd,
-      totalDzd: totalDzd ?? this.totalDzd,
+      unitPrice: unitPrice ?? this.unitPrice,
+      costPrice: costPrice ?? this.costPrice,
+      deliveryPrice: deliveryPrice ?? this.deliveryPrice,
+      deliveryType: deliveryType ?? this.deliveryType,
       status: status ?? this.status,
       deliveryCompany: deliveryCompany ?? this.deliveryCompany,
       trackingNumber: trackingNumber ?? this.trackingNumber,
@@ -1722,6 +1786,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1729,7 +1794,10 @@ class OrdersCompanion extends UpdateCompanion<Order> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
+    }
+    if (reference.present) {
+      map['reference'] = Variable<String>(reference.value);
     }
     if (customerName.present) {
       map['customer_name'] = Variable<String>(customerName.value);
@@ -1738,16 +1806,22 @@ class OrdersCompanion extends UpdateCompanion<Order> {
       map['phone'] = Variable<String>(phone.value);
     }
     if (wilayaCode.present) {
-      map['wilaya_code'] = Variable<int>(wilayaCode.value);
+      map['wilaya_code'] = Variable<String>(wilayaCode.value);
+    }
+    if (wilayaName.present) {
+      map['wilaya_name'] = Variable<String>(wilayaName.value);
+    }
+    if (wilayaNameAr.present) {
+      map['wilaya_name_ar'] = Variable<String>(wilayaNameAr.value);
     }
     if (commune.present) {
       map['commune'] = Variable<String>(commune.value);
     }
-    if (addressNote.present) {
-      map['address_note'] = Variable<String>(addressNote.value);
+    if (address.present) {
+      map['address'] = Variable<String>(address.value);
     }
     if (productId.present) {
-      map['product_id'] = Variable<int>(productId.value);
+      map['product_id'] = Variable<String>(productId.value);
     }
     if (productName.present) {
       map['product_name'] = Variable<String>(productName.value);
@@ -1755,20 +1829,17 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     if (quantity.present) {
       map['quantity'] = Variable<int>(quantity.value);
     }
-    if (unitPriceDzd.present) {
-      map['unit_price_dzd'] = Variable<int>(unitPriceDzd.value);
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<double>(unitPrice.value);
     }
-    if (buyingCostDzd.present) {
-      map['buying_cost_dzd'] = Variable<int>(buyingCostDzd.value);
+    if (costPrice.present) {
+      map['cost_price'] = Variable<double>(costPrice.value);
     }
-    if (deliveryMode.present) {
-      map['delivery_mode'] = Variable<String>(deliveryMode.value);
+    if (deliveryPrice.present) {
+      map['delivery_price'] = Variable<double>(deliveryPrice.value);
     }
-    if (deliveryFeeDzd.present) {
-      map['delivery_fee_dzd'] = Variable<int>(deliveryFeeDzd.value);
-    }
-    if (totalDzd.present) {
-      map['total_dzd'] = Variable<int>(totalDzd.value);
+    if (deliveryType.present) {
+      map['delivery_type'] = Variable<String>(deliveryType.value);
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
@@ -1791,6 +1862,9 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1798,26 +1872,29 @@ class OrdersCompanion extends UpdateCompanion<Order> {
   String toString() {
     return (StringBuffer('OrdersCompanion(')
           ..write('id: $id, ')
+          ..write('reference: $reference, ')
           ..write('customerName: $customerName, ')
           ..write('phone: $phone, ')
           ..write('wilayaCode: $wilayaCode, ')
+          ..write('wilayaName: $wilayaName, ')
+          ..write('wilayaNameAr: $wilayaNameAr, ')
           ..write('commune: $commune, ')
-          ..write('addressNote: $addressNote, ')
+          ..write('address: $address, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
           ..write('quantity: $quantity, ')
-          ..write('unitPriceDzd: $unitPriceDzd, ')
-          ..write('buyingCostDzd: $buyingCostDzd, ')
-          ..write('deliveryMode: $deliveryMode, ')
-          ..write('deliveryFeeDzd: $deliveryFeeDzd, ')
-          ..write('totalDzd: $totalDzd, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('costPrice: $costPrice, ')
+          ..write('deliveryPrice: $deliveryPrice, ')
+          ..write('deliveryType: $deliveryType, ')
           ..write('status: $status, ')
           ..write('deliveryCompany: $deliveryCompany, ')
           ..write('trackingNumber: $trackingNumber, ')
           ..write('codPaidByCompany: $codPaidByCompany, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2049,20 +2126,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 }
 
 typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
-  Value<int> id,
+  required String id,
   required String name,
-  Value<int> buyingCostDzd,
-  Value<int> sellingPriceDzd,
-  Value<int> stockQty,
+  Value<double> price,
+  Value<double> cost,
+  Value<int> stock,
   required DateTime createdAt,
+  Value<int> rowid,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
-  Value<int> id,
+  Value<String> id,
   Value<String> name,
-  Value<int> buyingCostDzd,
-  Value<int> sellingPriceDzd,
-  Value<int> stockQty,
+  Value<double> price,
+  Value<double> cost,
+  Value<int> stock,
   Value<DateTime> createdAt,
+  Value<int> rowid,
 });
 
 class $$ProductsTableFilterComposer
@@ -2074,7 +2153,7 @@ class $$ProductsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -2084,18 +2163,18 @@ class $$ProductsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
+  ColumnFilters<double> get price => $composableBuilder(
+    column: $table.price,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get sellingPriceDzd => $composableBuilder(
-    column: $table.sellingPriceDzd,
+  ColumnFilters<double> get cost => $composableBuilder(
+    column: $table.cost,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get stockQty => $composableBuilder(
-    column: $table.stockQty,
+  ColumnFilters<int> get stock => $composableBuilder(
+    column: $table.stock,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2114,7 +2193,7 @@ class $$ProductsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2124,18 +2203,18 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
+  ColumnOrderings<double> get price => $composableBuilder(
+    column: $table.price,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get sellingPriceDzd => $composableBuilder(
-    column: $table.sellingPriceDzd,
+  ColumnOrderings<double> get cost => $composableBuilder(
+    column: $table.cost,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get stockQty => $composableBuilder(
-    column: $table.stockQty,
+  ColumnOrderings<int> get stock => $composableBuilder(
+    column: $table.stock,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2154,24 +2233,20 @@ class $$ProductsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
-    builder: (column) => column,
-  );
+  GeneratedColumn<double> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
 
-  GeneratedColumn<int> get sellingPriceDzd => $composableBuilder(
-    column: $table.sellingPriceDzd,
-    builder: (column) => column,
-  );
+  GeneratedColumn<double> get cost =>
+      $composableBuilder(column: $table.cost, builder: (column) => column);
 
-  GeneratedColumn<int> get stockQty =>
-      $composableBuilder(column: $table.stockQty, builder: (column) => column);
+  GeneratedColumn<int> get stock =>
+      $composableBuilder(column: $table.stock, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2205,35 +2280,39 @@ class $$ProductsTableTableManager
               $$ProductsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<int> buyingCostDzd = const Value.absent(),
-                Value<int> sellingPriceDzd = const Value.absent(),
-                Value<int> stockQty = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<double> cost = const Value.absent(),
+                Value<int> stock = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => ProductsCompanion(
                 id: id,
                 name: name,
-                buyingCostDzd: buyingCostDzd,
-                sellingPriceDzd: sellingPriceDzd,
-                stockQty: stockQty,
+                price: price,
+                cost: cost,
+                stock: stock,
                 createdAt: createdAt,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
                 required String name,
-                Value<int> buyingCostDzd = const Value.absent(),
-                Value<int> sellingPriceDzd = const Value.absent(),
-                Value<int> stockQty = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<double> cost = const Value.absent(),
+                Value<int> stock = const Value.absent(),
                 required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
               }) => ProductsCompanion.insert(
                 id: id,
                 name: name,
-                buyingCostDzd: buyingCostDzd,
-                sellingPriceDzd: sellingPriceDzd,
-                stockQty: stockQty,
+                price: price,
+                cost: cost,
+                stock: stock,
                 createdAt: createdAt,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2440,50 +2519,56 @@ typedef $$DeliveryPricesTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 typedef $$OrdersTableCreateCompanionBuilder = OrdersCompanion Function({
-  Value<int> id,
+  required String id,
+  Value<String> reference,
   required String customerName,
   required String phone,
-  required int wilayaCode,
+  Value<String> wilayaCode,
+  Value<String> wilayaName,
+  Value<String> wilayaNameAr,
   Value<String> commune,
-  Value<String> addressNote,
-  Value<int?> productId,
+  Value<String> address,
+  Value<String> productId,
   required String productName,
   Value<int> quantity,
-  Value<int> unitPriceDzd,
-  Value<int> buyingCostDzd,
-  Value<String> deliveryMode,
-  Value<int> deliveryFeeDzd,
-  Value<int> totalDzd,
+  Value<double> unitPrice,
+  Value<double> costPrice,
+  Value<double> deliveryPrice,
+  Value<String> deliveryType,
   Value<String> status,
   Value<String> deliveryCompany,
   Value<String> trackingNumber,
   Value<bool> codPaidByCompany,
   Value<String> notes,
   required DateTime createdAt,
-  required DateTime updatedAt,
+  Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 typedef $$OrdersTableUpdateCompanionBuilder = OrdersCompanion Function({
-  Value<int> id,
+  Value<String> id,
+  Value<String> reference,
   Value<String> customerName,
   Value<String> phone,
-  Value<int> wilayaCode,
+  Value<String> wilayaCode,
+  Value<String> wilayaName,
+  Value<String> wilayaNameAr,
   Value<String> commune,
-  Value<String> addressNote,
-  Value<int?> productId,
+  Value<String> address,
+  Value<String> productId,
   Value<String> productName,
   Value<int> quantity,
-  Value<int> unitPriceDzd,
-  Value<int> buyingCostDzd,
-  Value<String> deliveryMode,
-  Value<int> deliveryFeeDzd,
-  Value<int> totalDzd,
+  Value<double> unitPrice,
+  Value<double> costPrice,
+  Value<double> deliveryPrice,
+  Value<String> deliveryType,
   Value<String> status,
   Value<String> deliveryCompany,
   Value<String> trackingNumber,
   Value<bool> codPaidByCompany,
   Value<String> notes,
   Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
+  Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 
 class $$OrdersTableFilterComposer
@@ -2495,8 +2580,13 @@ class $$OrdersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reference => $composableBuilder(
+    column: $table.reference,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2510,8 +2600,18 @@ class $$OrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get wilayaCode => $composableBuilder(
+  ColumnFilters<String> get wilayaCode => $composableBuilder(
     column: $table.wilayaCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wilayaName => $composableBuilder(
+    column: $table.wilayaName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wilayaNameAr => $composableBuilder(
+    column: $table.wilayaNameAr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2520,12 +2620,12 @@ class $$OrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get addressNote => $composableBuilder(
-    column: $table.addressNote,
+  ColumnFilters<String> get address => $composableBuilder(
+    column: $table.address,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get productId => $composableBuilder(
+  ColumnFilters<String> get productId => $composableBuilder(
     column: $table.productId,
     builder: (column) => ColumnFilters(column),
   );
@@ -2540,28 +2640,23 @@ class $$OrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get unitPriceDzd => $composableBuilder(
-    column: $table.unitPriceDzd,
+  ColumnFilters<double> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
+  ColumnFilters<double> get costPrice => $composableBuilder(
+    column: $table.costPrice,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get deliveryMode => $composableBuilder(
-    column: $table.deliveryMode,
+  ColumnFilters<double> get deliveryPrice => $composableBuilder(
+    column: $table.deliveryPrice,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get deliveryFeeDzd => $composableBuilder(
-    column: $table.deliveryFeeDzd,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get totalDzd => $composableBuilder(
-    column: $table.totalDzd,
+  ColumnFilters<String> get deliveryType => $composableBuilder(
+    column: $table.deliveryType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2610,8 +2705,13 @@ class $$OrdersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reference => $composableBuilder(
+    column: $table.reference,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2625,8 +2725,18 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get wilayaCode => $composableBuilder(
+  ColumnOrderings<String> get wilayaCode => $composableBuilder(
     column: $table.wilayaCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wilayaName => $composableBuilder(
+    column: $table.wilayaName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wilayaNameAr => $composableBuilder(
+    column: $table.wilayaNameAr,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2635,12 +2745,12 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get addressNote => $composableBuilder(
-    column: $table.addressNote,
+  ColumnOrderings<String> get address => $composableBuilder(
+    column: $table.address,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get productId => $composableBuilder(
+  ColumnOrderings<String> get productId => $composableBuilder(
     column: $table.productId,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2655,28 +2765,23 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get unitPriceDzd => $composableBuilder(
-    column: $table.unitPriceDzd,
+  ColumnOrderings<double> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
+  ColumnOrderings<double> get costPrice => $composableBuilder(
+    column: $table.costPrice,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get deliveryMode => $composableBuilder(
-    column: $table.deliveryMode,
+  ColumnOrderings<double> get deliveryPrice => $composableBuilder(
+    column: $table.deliveryPrice,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get deliveryFeeDzd => $composableBuilder(
-    column: $table.deliveryFeeDzd,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get totalDzd => $composableBuilder(
-    column: $table.totalDzd,
+  ColumnOrderings<String> get deliveryType => $composableBuilder(
+    column: $table.deliveryType,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2725,8 +2830,11 @@ class $$OrdersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get reference =>
+      $composableBuilder(column: $table.reference, builder: (column) => column);
 
   GeneratedColumn<String> get customerName => $composableBuilder(
     column: $table.customerName,
@@ -2736,20 +2844,28 @@ class $$OrdersTableAnnotationComposer
   GeneratedColumn<String> get phone =>
       $composableBuilder(column: $table.phone, builder: (column) => column);
 
-  GeneratedColumn<int> get wilayaCode => $composableBuilder(
+  GeneratedColumn<String> get wilayaCode => $composableBuilder(
     column: $table.wilayaCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wilayaName => $composableBuilder(
+    column: $table.wilayaName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wilayaNameAr => $composableBuilder(
+    column: $table.wilayaNameAr,
     builder: (column) => column,
   );
 
   GeneratedColumn<String> get commune =>
       $composableBuilder(column: $table.commune, builder: (column) => column);
 
-  GeneratedColumn<String> get addressNote => $composableBuilder(
-    column: $table.addressNote,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => column);
 
-  GeneratedColumn<int> get productId =>
+  GeneratedColumn<String> get productId =>
       $composableBuilder(column: $table.productId, builder: (column) => column);
 
   GeneratedColumn<String> get productName => $composableBuilder(
@@ -2760,28 +2876,21 @@ class $$OrdersTableAnnotationComposer
   GeneratedColumn<int> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
 
-  GeneratedColumn<int> get unitPriceDzd => $composableBuilder(
-    column: $table.unitPriceDzd,
+  GeneratedColumn<double> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get costPrice =>
+      $composableBuilder(column: $table.costPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get deliveryPrice => $composableBuilder(
+    column: $table.deliveryPrice,
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get buyingCostDzd => $composableBuilder(
-    column: $table.buyingCostDzd,
+  GeneratedColumn<String> get deliveryType => $composableBuilder(
+    column: $table.deliveryType,
     builder: (column) => column,
   );
-
-  GeneratedColumn<String> get deliveryMode => $composableBuilder(
-    column: $table.deliveryMode,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get deliveryFeeDzd => $composableBuilder(
-    column: $table.deliveryFeeDzd,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get totalDzd =>
-      $composableBuilder(column: $table.totalDzd, builder: (column) => column);
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
@@ -2839,42 +2948,47 @@ class $$OrdersTableTableManager
               $$OrdersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> reference = const Value.absent(),
                 Value<String> customerName = const Value.absent(),
                 Value<String> phone = const Value.absent(),
-                Value<int> wilayaCode = const Value.absent(),
+                Value<String> wilayaCode = const Value.absent(),
+                Value<String> wilayaName = const Value.absent(),
+                Value<String> wilayaNameAr = const Value.absent(),
                 Value<String> commune = const Value.absent(),
-                Value<String> addressNote = const Value.absent(),
-                Value<int?> productId = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> productId = const Value.absent(),
                 Value<String> productName = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
-                Value<int> unitPriceDzd = const Value.absent(),
-                Value<int> buyingCostDzd = const Value.absent(),
-                Value<String> deliveryMode = const Value.absent(),
-                Value<int> deliveryFeeDzd = const Value.absent(),
-                Value<int> totalDzd = const Value.absent(),
+                Value<double> unitPrice = const Value.absent(),
+                Value<double> costPrice = const Value.absent(),
+                Value<double> deliveryPrice = const Value.absent(),
+                Value<String> deliveryType = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String> deliveryCompany = const Value.absent(),
                 Value<String> trackingNumber = const Value.absent(),
                 Value<bool> codPaidByCompany = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => OrdersCompanion(
                 id: id,
+                reference: reference,
                 customerName: customerName,
                 phone: phone,
                 wilayaCode: wilayaCode,
+                wilayaName: wilayaName,
+                wilayaNameAr: wilayaNameAr,
                 commune: commune,
-                addressNote: addressNote,
+                address: address,
                 productId: productId,
                 productName: productName,
                 quantity: quantity,
-                unitPriceDzd: unitPriceDzd,
-                buyingCostDzd: buyingCostDzd,
-                deliveryMode: deliveryMode,
-                deliveryFeeDzd: deliveryFeeDzd,
-                totalDzd: totalDzd,
+                unitPrice: unitPrice,
+                costPrice: costPrice,
+                deliveryPrice: deliveryPrice,
+                deliveryType: deliveryType,
                 status: status,
                 deliveryCompany: deliveryCompany,
                 trackingNumber: trackingNumber,
@@ -2882,45 +2996,51 @@ class $$OrdersTableTableManager
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required String id,
+                Value<String> reference = const Value.absent(),
                 required String customerName,
                 required String phone,
-                required int wilayaCode,
+                Value<String> wilayaCode = const Value.absent(),
+                Value<String> wilayaName = const Value.absent(),
+                Value<String> wilayaNameAr = const Value.absent(),
                 Value<String> commune = const Value.absent(),
-                Value<String> addressNote = const Value.absent(),
-                Value<int?> productId = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> productId = const Value.absent(),
                 required String productName,
                 Value<int> quantity = const Value.absent(),
-                Value<int> unitPriceDzd = const Value.absent(),
-                Value<int> buyingCostDzd = const Value.absent(),
-                Value<String> deliveryMode = const Value.absent(),
-                Value<int> deliveryFeeDzd = const Value.absent(),
-                Value<int> totalDzd = const Value.absent(),
+                Value<double> unitPrice = const Value.absent(),
+                Value<double> costPrice = const Value.absent(),
+                Value<double> deliveryPrice = const Value.absent(),
+                Value<String> deliveryType = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String> deliveryCompany = const Value.absent(),
                 Value<String> trackingNumber = const Value.absent(),
                 Value<bool> codPaidByCompany = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 required DateTime createdAt,
-                required DateTime updatedAt,
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => OrdersCompanion.insert(
                 id: id,
+                reference: reference,
                 customerName: customerName,
                 phone: phone,
                 wilayaCode: wilayaCode,
+                wilayaName: wilayaName,
+                wilayaNameAr: wilayaNameAr,
                 commune: commune,
-                addressNote: addressNote,
+                address: address,
                 productId: productId,
                 productName: productName,
                 quantity: quantity,
-                unitPriceDzd: unitPriceDzd,
-                buyingCostDzd: buyingCostDzd,
-                deliveryMode: deliveryMode,
-                deliveryFeeDzd: deliveryFeeDzd,
-                totalDzd: totalDzd,
+                unitPrice: unitPrice,
+                costPrice: costPrice,
+                deliveryPrice: deliveryPrice,
+                deliveryType: deliveryType,
                 status: status,
                 deliveryCompany: deliveryCompany,
                 trackingNumber: trackingNumber,
@@ -2928,6 +3048,7 @@ class $$OrdersTableTableManager
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(

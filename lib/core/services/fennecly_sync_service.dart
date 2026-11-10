@@ -41,11 +41,11 @@ class FenneclySyncService {
         } catch (_) {}
       }
 
-      // 2) Delivery tariffs (owner-scoped in fennecly; try common owner columns)
+      // 2) Delivery tariffs — only rows for the signed-in user (no unfiltered fallback)
       final uid = _db.auth.currentUser?.id;
       List<dynamic> trows = const [];
       if (uid != null) {
-        for (final ownerCol in const ['owner_id', 'store_id', 'user_id']) {
+        for (final ownerCol in const ['owner_id', 'user_id']) {
           try {
             final res = await _db.from('delivery_tariffs').select('*').eq(ownerCol, uid);
             if (res is List && res.isNotEmpty) {
@@ -54,12 +54,12 @@ class FenneclySyncService {
             }
           } catch (_) {}
         }
-      }
-      // Fallback: try readable rows (RLS may allow) - limit to avoid huge pulls
-      if (trows.isEmpty) {
-        try {
-          trows = await _db.from('delivery_tariffs').select('*').limit(5000);
-        } catch (_) {}
+        if (trows.isEmpty) {
+          try {
+            final res = await _db.from('delivery_tariffs').select('*').eq('store_id', uid);
+            if (res is List) trows = res;
+          } catch (_) {}
+        }
       }
 
       for (final r in trows) {

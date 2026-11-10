@@ -1,12 +1,15 @@
 import 'package:drift/drift.dart';
 
 class Products extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text()();
   TextColumn get name => text()();
-  IntColumn get buyingCostDzd => integer().withDefault(const Constant(0))();
-  IntColumn get sellingPriceDzd => integer().withDefault(const Constant(0))();
-  IntColumn get stockQty => integer().withDefault(const Constant(0))();
+  RealColumn get price => real().withDefault(const Constant(0.0))();
+  RealColumn get cost => real().withDefault(const Constant(0.0))();
+  IntColumn get stock => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class DeliveryPrices extends Table {
@@ -19,28 +22,32 @@ class DeliveryPrices extends Table {
 }
 
 class Orders extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text()();
+  TextColumn get reference => text().withDefault(const Constant(''))();
   TextColumn get customerName => text()();
   TextColumn get phone => text()();
-  IntColumn get wilayaCode => integer()();
+  TextColumn get wilayaCode => text().withDefault(const Constant(''))();
+  TextColumn get wilayaName => text().withDefault(const Constant(''))();
+  TextColumn get wilayaNameAr => text().withDefault(const Constant(''))();
   TextColumn get commune => text().withDefault(const Constant(''))();
-  TextColumn get addressNote => text().withDefault(const Constant(''))();
-  IntColumn get productId => integer().nullable()();
+  TextColumn get address => text().withDefault(const Constant(''))();
+  TextColumn get productId => text().withDefault(const Constant(''))();
   TextColumn get productName => text()();
   IntColumn get quantity => integer().withDefault(const Constant(1))();
-  IntColumn get unitPriceDzd => integer().withDefault(const Constant(0))();
-  IntColumn get buyingCostDzd => integer().withDefault(const Constant(0))();
-  TextColumn get deliveryMode => text().withDefault(const Constant('home'))();
-  IntColumn get deliveryFeeDzd => integer().withDefault(const Constant(0))();
-  IntColumn get totalDzd => integer().withDefault(const Constant(0))();
+  RealColumn get unitPrice => real().withDefault(const Constant(0.0))();
+  RealColumn get costPrice => real().withDefault(const Constant(0.0))();
+  RealColumn get deliveryPrice => real().withDefault(const Constant(0.0))();
+  TextColumn get deliveryType => text().withDefault(const Constant('home'))();
   TextColumn get status => text().withDefault(const Constant('new'))();
   TextColumn get deliveryCompany => text().withDefault(const Constant(''))();
   TextColumn get trackingNumber => text().withDefault(const Constant(''))();
-  BoolColumn get codPaidByCompany =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get codPaidByCompany => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().withDefault(const Constant(''))();
   DateTimeColumn get createdAt => dateTime()();
-  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class AppSettings extends Table {

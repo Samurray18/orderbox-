@@ -16,7 +16,8 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'orderbox_dz_v2');
+    // v3: schema aligned with core models (string IDs, full order fields)
+    return driftDatabase(name: 'orderbox_dz_v3');
   }
 
   // Products
@@ -26,24 +27,23 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<Product>> watchAllProducts() =>
       (select(products)..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
 
-  Future<Product?> getProductById(int id) =>
+  Future<Product?> getProductById(String id) =>
       (select(products)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<int> insertProduct(ProductsCompanion entry) =>
-      into(products).insert(entry);
+  Future<void> upsertProduct(ProductsCompanion entry) =>
+      into(products).insertOnConflictUpdate(entry);
 
   Future<bool> updateProductRow(Product row) => update(products).replace(row);
 
-  Future<int> deleteProductById(int id) =>
+  Future<int> deleteProductById(String id) =>
       (delete(products)..where((t) => t.id.equals(id))).go();
 
-  Future<void> adjustStock(int productId, int delta) async {
-    final p = await getProductById(productId);
-    if (p == null) return;
-    final next = p.stockQty + delta;
-    await (update(products)..where((t) => t.id.equals(productId))).write(
-      ProductsCompanion(stockQty: Value(next < 0 ? 0 : next)),
-    );
+  Future<void> replaceAllProducts(List<ProductsCompanion> entries) async {
+    await transaction(() async {
+      await delete(products).go();
+      if (entries.isEmpty) return;
+      await batch((b) => b.insertAll(products, entries));
+    });
   }
 
   // Delivery prices
@@ -93,26 +93,23 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<Order>> watchAllOrders() =>
       (select(orders)..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
 
-  Future<Order?> getOrderById(int id) =>
+  Future<Order?> getOrderById(String id) =>
       (select(orders)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<int> insertOrder(OrdersCompanion entry) => into(orders).insert(entry);
+  Future<void> upsertOrder(OrdersCompanion entry) =>
+      into(orders).insertOnConflictUpdate(entry);
 
   Future<bool> updateOrderRow(Order row) => update(orders).replace(row);
 
-  Future<int> updateOrder(int id, OrdersCompanion entry) =>
-      (update(orders)..where((t) => t.id.equals(id))).write(entry);
-
-  Future<int> deleteOrderById(int id) =>
+  Future<int> deleteOrderById(String id) =>
       (delete(orders)..where((t) => t.id.equals(id))).go();
 
-  Future<List<Order>> ordersByPhone(String phone) {
-    final normalized = phone.replaceAll(RegExp(r'\D'), '');
-    // simple match on digits contained; SQLite LIKE helps
-    return (select(orders)
-          ..where((t) => t.phone.like('%$normalized%'))
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .get();
+  Future<void> replaceAllOrders(List<OrdersCompanion> entries) async {
+    await transaction(() async {
+      await delete(orders).go();
+      if (entries.isEmpty) return;
+      await batch((b) => b.insertAll(orders, entries));
+    });
   }
 
   // Settings

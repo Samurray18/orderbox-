@@ -157,6 +157,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.4))
                                 : Text(ar ? 'دخول' : 'Se connecter'),
                           ),
+                          const SizedBox(height: AppSpacing.sm),
+                          OutlinedButton(
+                            onPressed: _loading
+                                ? null
+                                : () {
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(builder: (_) => const HomeShell()),
+                                      (_) => false,
+                                    );
+                                  },
+                            child: Text(ar ? 'متابعة بدون حساب' : 'Continuer sans compte'),
+                          ),
                         ],
                       ),
                     ),

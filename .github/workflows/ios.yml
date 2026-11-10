@@ -32,7 +32,13 @@ jobs:
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign
+        env:
+          FENNECLY_SUPABASE_URL: ${{ secrets.FENNECLY_SUPABASE_URL }}
+          FENNECLY_SUPABASE_ANON_KEY: ${{ secrets.FENNECLY_SUPABASE_ANON_KEY }}
+        run: >-
+          flutter build ios --release --no-codesign
+          --dart-define=FENNECLY_SUPABASE_URL=${FENNECLY_SUPABASE_URL}
+          --dart-define=FENNECLY_SUPABASE_ANON_KEY=${FENNECLY_SUPABASE_ANON_KEY}
 
       - name: Package unsigned IPA
         run: |

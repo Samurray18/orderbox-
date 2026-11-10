@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../data/db/app_database.dart' as db;
 import '../../domain/models/algeria_geo.dart';
 import '../models/order.dart';
 import '../models/product.dart';
@@ -20,9 +22,10 @@ class DailyRevenue {
 }
 
 class AppStore extends ChangeNotifier {
-  AppStore(this._prefs);
+  AppStore(this._prefs, this._db);
 
   final SharedPreferences _prefs;
+  final db.AppDatabase _db;
 
   static const _kOrders = 'orderbox.orders.v1';
   static const _kProducts = 'orderbox.products.v1';
@@ -37,6 +40,7 @@ class AppStore extends ChangeNotifier {
   static const _kFenneclyStoreId = 'orderbox.fennecly.storeId';
   static const _kFenneclyLastSync = 'orderbox.fennecly.lastSync';
   static const _kDataSource = 'orderbox.dataSource'; // local | fennecly
+  static const _kMigratedToDrift = 'orderbox.migrated.drift.v3';
 
   List<Order> _orders = [];
   List<Product> _products = [];
@@ -163,7 +167,7 @@ class AppStore extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------
-  // Loading / persistence
+  // Loading / persistence (drift SQLite for orders/products/customers)
   // ---------------------------------------------------------------------
   Future<void> load() async {
     final savedLocale = _prefs.getString(_kLocale);
@@ -191,20 +195,51 @@ class AppStore extends ChangeNotifier {
     _fenneclyLastSync = lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw);
     _loadShippingOptions();
 
-    final ordersRaw = _prefs.getString(_kOrders);
-    if (ordersRaw == null) {
+    await _migrateLegacyPrefsToDriftIfNeeded();
+
+    _orders = (await _db.getAllOrders()).map(_orderFromDb).toList();
+    _products = (await _db.getAllProducts()).map(_productFromDb).toList();
+
+    // First run (no legacy, empty drift): seed demo data locally.
+    if (_orders.isEmpty && _products.isEmpty && !_prefs.containsKey(_kMigratedToDrift)) {
       _orders = DemoData.orders();
       _products = DemoData.products();
-      _dataSource = 'local';
-      _persistOrders();
-      _persistProducts();
-    } else {
-      _orders = _decodeOrders(ordersRaw);
-      _products = _decodeProducts(_prefs.getString(_kProducts));
+      await _persistOrders();
+      await _persistProducts();
+      await _prefs.setBool(_kMigratedToDrift, true);
+      await _prefs.remove(_kOrders);
+      await _prefs.remove(_kProducts);
     }
 
     _ready = true;
     notifyListeners();
+  }
+
+  Future<void> _migrateLegacyPrefsToDriftIfNeeded() async {
+    if (_prefs.getBool(_kMigratedToDrift) == true) return;
+    final ordersRaw = _prefs.getString(_kOrders);
+    final productsRaw = _prefs.getString(_kProducts);
+    if (ordersRaw == null && productsRaw == null) {
+      // nothing to migrate (either fresh install or already clean)
+      // mark migrated only if drift already has data; otherwise let load() seed demo
+      final existingOrders = await _db.getAllOrders();
+      final existingProducts = await _db.getAllProducts();
+      if (existingOrders.isNotEmpty || existingProducts.isNotEmpty) {
+        await _prefs.setBool(_kMigratedToDrift, true);
+      }
+      return;
+    }
+    final legacyOrders = _decodeOrders(ordersRaw);
+    final legacyProducts = _decodeProducts(productsRaw);
+    if (legacyOrders.isNotEmpty) {
+      await _db.replaceAllOrders(legacyOrders.map(_orderToCompanion).toList());
+    }
+    if (legacyProducts.isNotEmpty) {
+      await _db.replaceAllProducts(legacyProducts.map(_productToCompanion).toList());
+    }
+    await _prefs.setBool(_kMigratedToDrift, true);
+    await _prefs.remove(_kOrders);
+    await _prefs.remove(_kProducts);
   }
 
   List<Order> _decodeOrders(String? raw) {
@@ -231,19 +266,83 @@ class AppStore extends ChangeNotifier {
     }
   }
 
-  void _persistOrders() {
-    _prefs.setString(
-      _kOrders,
-      jsonEncode(_orders.map((order) => order.toJson()).toList()),
-    );
+  Future<void> _persistOrders() async {
+    await _db.replaceAllOrders(_orders.map(_orderToCompanion).toList());
   }
 
-  void _persistProducts() {
-    _prefs.setString(
-      _kProducts,
-      jsonEncode(_products.map((product) => product.toJson()).toList()),
-    );
+  Future<void> _persistProducts() async {
+    await _db.replaceAllProducts(_products.map(_productToCompanion).toList());
   }
+
+  // Drift mapping
+  Order _orderFromDb(db.Order r) => Order(
+        id: r.id,
+        reference: r.reference,
+        customerName: r.customerName,
+        phone: r.phone,
+        wilayaCode: r.wilayaCode,
+        wilayaName: r.wilayaName,
+        wilayaNameAr: r.wilayaNameAr,
+        commune: r.commune,
+        address: r.address,
+        productId: r.productId,
+        productName: r.productName,
+        quantity: r.quantity,
+        unitPrice: r.unitPrice,
+        costPrice: r.costPrice,
+        deliveryPrice: r.deliveryPrice,
+        status: OrderStatusX.fromId(r.status),
+        createdAt: r.createdAt,
+        notes: r.notes,
+        deliveryCompany: r.deliveryCompany,
+        deliveryType: r.deliveryType,
+        trackingNumber: r.trackingNumber,
+        codPaidByCompany: r.codPaidByCompany,
+      );
+
+  db.OrdersCompanion _orderToCompanion(Order o) => db.OrdersCompanion.insert(
+        id: o.id,
+        reference: Value(o.reference),
+        customerName: o.customerName,
+        phone: o.phone,
+        wilayaCode: Value(o.wilayaCode),
+        wilayaName: Value(o.wilayaName),
+        wilayaNameAr: Value(o.wilayaNameAr),
+        commune: Value(o.commune),
+        address: Value(o.address),
+        productId: Value(o.productId),
+        productName: o.productName,
+        quantity: Value(o.quantity),
+        unitPrice: Value(o.unitPrice),
+        costPrice: Value(o.costPrice),
+        deliveryPrice: Value(o.deliveryPrice),
+        deliveryType: Value(o.deliveryType),
+        status: Value(o.status.id),
+        deliveryCompany: Value(o.deliveryCompany),
+        trackingNumber: Value(o.trackingNumber),
+        codPaidByCompany: Value(o.codPaidByCompany),
+        notes: Value(o.notes),
+        createdAt: o.createdAt,
+        updatedAt: Value(DateTime.now()),
+      );
+
+  Product _productFromDb(db.Product r) => Product(
+        id: r.id,
+        name: r.name,
+        price: r.price,
+        cost: r.cost,
+        stock: r.stock,
+        createdAt: r.createdAt,
+      );
+
+  db.ProductsCompanion _productToCompanion(Product p) => db.ProductsCompanion.insert(
+        id: p.id,
+        name: p.name,
+        price: Value(p.price),
+        cost: Value(p.cost),
+        stock: Value(p.stock),
+        createdAt: p.createdAt,
+      );
 
   void _loadShippingOptions() {
     final companiesRaw = _prefs.getString(_kDeliveryCompanies);

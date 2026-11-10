@@ -8,7 +8,6 @@ import '../../core/models/order.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/services/fennecly_supabase.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/shell/home_shell.dart';
 
@@ -29,9 +28,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _finish() {
+  void _finish({bool login = false}) {
     context.read<AppStore>().completeOnboarding();
-    final target = FenneclySupabase.isLoggedIn ? const HomeShell() : const LoginScreen();
+    final Widget target;
+    if (login) {
+      target = const LoginScreen();
+    } else {
+      target = const HomeShell();
+    }
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 520),
@@ -197,6 +201,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
               ),
+              if (_index == 2) ...[
+                const SizedBox(height: AppSpacing.xs),
+                TextButton(
+                  onPressed: () => _finish(login: true),
+                  child: Text(
+                    l10n.isArabic
+                        ? 'تسجيل الدخول إلى Fennecly (اختياري)'
+                        : 'Se connecter à Fennecly (optionnel)',
+                  ),
+                ),
+              ],
             ],
           ),
         ),

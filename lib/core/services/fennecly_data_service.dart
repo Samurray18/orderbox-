@@ -453,16 +453,19 @@ class FenneclyDataService {
         }
       } catch (_) {}
     }
-    // tariffs - try owner-scoped
+    // tariffs - only rows for the signed-in user (owner/store-scoped)
     List<dynamic> trows = const [];
-    for (final ownerCol in ['owner_id', 'store_id', 'user_id']) {
+    for (final ownerCol in ['owner_id', 'user_id']) {
       try {
-        final res = await _db.from('delivery_tariffs').select('*').eq(ownerCol, ownerCol == 'store_id' ? (storeId ?? userId) : userId);
+        final res = await _db.from('delivery_tariffs').select('*').eq(ownerCol, userId);
         if (res is List && res.isNotEmpty) { trows = res; break; }
       } catch (_) {}
     }
-    if (trows.isEmpty) {
-      try { trows = await _db.from('delivery_tariffs').select('*').limit(5000); } catch (_) {}
+    if (trows.isEmpty && storeId != null && storeId.isNotEmpty) {
+      try {
+        final res = await _db.from('delivery_tariffs').select('*').eq('store_id', storeId);
+        if (res is List) trows = res;
+      } catch (_) {}
     }
     for (final r in trows.whereType<Map>()) {
       final m = Map<String, dynamic>.from(r);

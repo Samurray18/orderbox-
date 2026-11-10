@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+import 'dart:convert';
+import 'dart:io';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/models/order.dart';
+import '../../core/services/fennecly_data_service.dart';
 import '../../core/services/whatsapp_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -31,6 +36,8 @@ class OrderDetailsScreen extends StatefulWidget {
 class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   Order? _order;
   bool _missing = false;
+  final TextEditingController _trackingController = TextEditingController();
+  bool _busyShipment = false;
 
   @override
   void didChangeDependencies() {
@@ -84,7 +91,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final order = _order;
     if (order == null) return;
     final ok = await WhatsAppService.call(order.phone);
-    if (!ok && mounted) {
+    if (!ok) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context);
       showAppSnackBar(
         context,
@@ -92,7 +100,95 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         icon: Icons.error_outline_rounded,
         iconColor: Theme.of(context).colorScheme.error,
       );
+      return;
     }
+    if (!mounted) return;
+    // Phase 1 parity: record the call in the shared call_logs table, then let
+    // the merchant pick the outcome (answered | no_answer | callback | pending).
+    final callLogId = await FenneclyDataService.logCall(
+      orderId: order.id,
+      customerPhone: order.phone,
+      customerName: order.customerName,
+      channel: 'phone',
+    );
+    if (callLogId == null || !mounted) return;
+    final outcome = await _askCallOutcome();
+    if (outcome == null || !mounted) return;
+    final updated = await FenneclyDataService.updateCallOutcome(
+      callLogId: callLogId,
+      outcome: outcome,
+    );
+    if (!updated || !mounted) return;
+    if (outcome == 'no_answer') {
+      // Web stores "no answer" outcomes via call_logs; mirror it onto the
+      // order status (local + shared DB push handled by AppStore).
+      if (!mounted) return;
+      context.read<AppStore>().updateOrderStatus(
+            order.copyWith(status: OrderStatus.noAnswer),
+            OrderStatus.noAnswer,
+          );
+    }
+  }
+
+  Future<String?> _askCallOutcome() async {
+    final l10n = AppLocalizations.of(context);
+    const options = <({String value, String label})>[
+      (value: 'answered', label: 'answered'),
+      (value: 'no_answer', label: 'noAnswer'),
+      (value: 'callback', label: 'callback'),
+      (value: 'pending', label: 'pending'),
+    ];
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        final texts = Theme.of(sheetContext).textTheme;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.callOutcomeTitle,
+                  textAlign: TextAlign.center,
+                  style: texts.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                for (final option in options) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      option.value == 'no_answer'
+                          ? Icons.phone_disabled_rounded
+                          : Icons.call_rounded,
+                      color: scheme.primary,
+                    ),
+                    title: Text(
+                      option.value == 'answered'
+                          ? l10n.callOutcomeAnswered
+                          : option.value == 'no_answer'
+                              ? l10n.callOutcomeNoAnswer
+                              : option.value == 'callback'
+                                  ? l10n.callOutcomeCallback
+                                  : l10n.callOutcomePending,
+                    ),
+                    onTap: () => Navigator.of(sheetContext).pop(option.value),
+                  ),
+                  const Divider(height: 1),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return picked;
   }
 
   Future<void> _delete() async {
@@ -123,6 +219,61 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     showAppSnackBar(context, l10n.isArabic ? 'تم تحديث الدفع (COD)' : 'Paiement COD mis à jour');
   }
 
+  Future<void> _createShipmentNow() async {
+    final order = _order;
+    if (order == null) return;
+    final tracking = _trackingController.text.trim();
+    if (tracking.isEmpty) {
+      showAppSnackBar(context, 'Tracking number requis');
+      return;
+    }
+    setState(() => _busyShipment = true);
+    final storeInfo = await FenneclyDataService.resolveCurrentStore();
+    final ok = await FenneclyDataService.createShipment(
+      storeId: storeInfo?.id ?? '',
+      orderId: order.id,
+      trackingNumber: tracking,
+      deliveryType: order.deliveryType == 'office' ? 'stopdesk' : 'domicile',
+    );
+    if (!mounted) return;
+    setState(() => _busyShipment = false);
+    if (ok) {
+      AppHaptics.success();
+      showAppSnackBar(context, 'Expédition créée');
+    } else {
+      AppHaptics.warning();
+      showAppSnackBar(context, 'Échec de la création de l’expédition');
+    }
+  }
+
+  Future<void> _fetchAndShareBordereau() async {
+    final order = _order;
+    if (order == null) return;
+    final storeInfo = await FenneclyDataService.resolveCurrentStore();
+    final storeId = storeInfo?.id ?? '';
+    final colisId = order.trackingNumber.isNotEmpty ? order.trackingNumber : order.id;
+    final pdfBase64 = await FenneclyDataService.fetchBordereauPdf(
+      storeId: storeId,
+      colisId: colisId,
+    );
+    if (!mounted) return;
+    if (pdfBase64 == null || pdfBase64.isEmpty) {
+      AppHaptics.warning();
+      showAppSnackBar(context, 'Bordereau indisponible');
+      return;
+    }
+    final bytes = base64Decode(pdfBase64);
+    final file = File(
+      '${Directory.systemTemp.path}/orderbox_bordereau_${order.id}.pdf',
+    );
+    await file.writeAsBytes(bytes);
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'Bordereau'),
+      );
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_missing) {
@@ -136,8 +287,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final arabic = l10n.isArabic;
     final scheme = Theme.of(context).colorScheme;
     final texts = Theme.of(context).textTheme;
-    final store = context.watch<AppStore>();
-    final storeName = store.storeNameOr(l10n.storeDefault);
 
     return Scaffold(
       body: CustomScrollView(
@@ -420,6 +569,43 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                         Switch(value: order.codPaidByCompany, onChanged: (_) => _toggleCodPaid()),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _busyShipment ? null : _createShipmentNow,
+                          icon: _busyShipment
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.local_shipping_rounded),
+                          label: Text(
+                            _order?.status == OrderStatus.newOrder ||
+                                    _order?.status == OrderStatus.noAnswer
+                                ? 'Créer expédition'
+                                : 'Nouvelle expédition',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _busyShipment ? null : _fetchAndShareBordereau,
+                        icon: const Icon(Icons.picture_as_pdf_rounded),
+                        label: const Text('Bordereau'),
+                      ),
+                    ],
+                  ),
+                  TextField(
+                    controller: _trackingController,
+                    decoration: InputDecoration(
+                      labelText: 'Tracking / Colis ID',
+                      hintText: _order?.trackingNumber ?? '',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),

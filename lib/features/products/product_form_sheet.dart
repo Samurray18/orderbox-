@@ -81,8 +81,26 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           createdAt: DateTime.now(),
         ),
       );
+      store.createProductInFennecly(
+        Product(
+          id: store.newId(),
+          name: name,
+          price: price,
+          cost: cost,
+          stock: stock,
+          createdAt: DateTime.now(),
+        ),
+      );
     } else {
       store.updateProduct(
+        widget.product!.copyWith(
+          name: name,
+          price: price,
+          cost: cost,
+          stock: stock,
+        ),
+      );
+      store.updateProductInFennecly(
         widget.product!.copyWith(
           name: name,
           price: price,

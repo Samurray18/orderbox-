@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
@@ -16,7 +18,6 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/filter_pill.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/order_card.dart';
-import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeletons.dart';
 import '../../core/widgets/soft_card.dart';
 import 'order_details_screen.dart';
@@ -37,6 +38,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   OrderStatus? _filter;
   bool _loading = true;
   Timer? _timer;
+  final Set<String> _selectedIds = <String>{};
+  bool _multiSelect = false;
 
   @override
   void initState() {
@@ -58,6 +61,56 @@ class _OrdersScreenState extends State<OrdersScreen> {
     AppHaptics.select();
     await Future<void>.delayed(const Duration(milliseconds: 620));
     if (mounted) setState(() {});
+  }
+
+  void _toggleSelect(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  Future<void> _bulkUpdateStatus(OrderStatus status) async {
+    final store = context.read<AppStore>();
+    final targets = store.orders.where((o) => _selectedIds.contains(o.id)).toList();
+    if (targets.isEmpty) return;
+    for (final order in targets) {
+      store.updateOrderStatus(order, status);
+    }
+    if (mounted) {
+      setState(() => _selectedIds.clear());
+    }
+  }
+
+  Future<void> _exportCsv(List<Order> rows) async {
+    if (rows.isEmpty) return;
+    final buffer = StringBuffer();
+    buffer.writeln('ID,Customer,Phone,Wilaya,City,Status,Total,Date');
+    for (final order in rows) {
+      final cells = <String>[
+        order.id,
+        order.customerName,
+        order.phone,
+        order.wilayaCode,
+        order.commune,
+        order.status.id,
+        order.total.toStringAsFixed(2),
+        order.createdAt.toIso8601String(),
+      ];
+      buffer.writeln(cells.map((c) => '"${c.replaceAll('"', '""')}"').join(','));
+    }
+    final file = File(
+      '${Directory.systemTemp.path}/orderbox_orders_${DateTime.now().millisecondsSinceEpoch}.csv',
+    );
+    file.writeAsStringSync(buffer.toString());
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'orders'),
+      );
+    } catch (_) {}
   }
 
   List<Order> _filteredOrders(AppStore store) {
@@ -215,6 +268,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          onPressed: () => setState(() => _multiSelect = true),
+                          icon: const Icon(Icons.checklist_rounded),
+                          label: Text(l10n.selectOrders),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
@@ -241,11 +303,64 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _exportCsv(filtered),
+                          icon: const Icon(Icons.download_rounded),
+                          label: Text(
+                            l10n.isArabic ? 'تصدير CSV' : 'Exporter les commandes (CSV)',
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+            if (_multiSelect) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: SoftCard(
+                    padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.checklist_rounded,
+                          size: AppSizes.iconSm,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            l10n.ordersCount(_selectedIds.length.toString()),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => setState(() => _multiSelect = false),
+                          child: Text(l10n.cancel),
+                        ),
+                        for (final status in OrderStatus.values)
+                          TextButton(
+                            onPressed: () => _bulkUpdateStatus(status),
+                            child: Text(l10n.statusLabel(status)),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (_loading)
               SliverPadding(
                 padding: const EdgeInsetsDirectional.symmetric(
@@ -304,6 +419,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       delay: Duration(milliseconds: (index * 34).clamp(0, 240)),
                       child: OrderCard(
                         order: order,
+                        showCheckbox: _multiSelect,
+                        checked: _selectedIds.contains(order.id),
+                        onCheckboxChanged: _multiSelect
+                            ? (value) => _toggleSelect(order.id)
+                            : null,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(

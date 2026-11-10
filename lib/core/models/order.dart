@@ -119,6 +119,7 @@ class Order {
 
   Order copyWith({
     String? reference,
+    String? id,
     String? customerName,
     String? phone,
     String? wilayaCode,
@@ -141,7 +142,7 @@ class Order {
     bool? codPaidByCompany,
   }) {
     return Order(
-      id: id,
+      id: id ?? this.id,
       reference: reference ?? this.reference,
       customerName: customerName ?? this.customerName,
       phone: phone ?? this.phone,

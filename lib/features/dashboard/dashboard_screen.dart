@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/models/order.dart';
+import '../../core/services/stock_alert_service.dart';
 import '../../core/theme/status_colors.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -21,7 +22,10 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeletons.dart';
 import '../../core/widgets/soft_card.dart';
 import '../../core/utils/context_ext.dart';
+import '../cod/cod_manager_screen.dart';
 import '../orders/order_details_screen.dart';
+import '../profit/profit_screen.dart';
+import '../returns/returns_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, this.onViewOrders});
@@ -42,6 +46,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _timer = Timer(const Duration(milliseconds: 620), () {
       if (mounted) setState(() => _loading = false);
+    });
+    // Low-stock local notification (max one per app run).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final store = context.read<AppStore>();
+      StockAlertService.checkAndNotify(
+        products: store.products,
+        isArabic: AppLocalizations.of(context).isArabic,
+      );
     });
   }
 
@@ -246,6 +259,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     AppSpacing.lg,
                     AppSpacing.sm,
                   ),
+                  child: _QuickActionsRow(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
                   child: SoftCard(
                     padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
                     child: Column(
@@ -355,6 +379,105 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuickActionsRow extends StatelessWidget {
+  const _QuickActionsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final ar = isArabicContext(context);
+    final scheme = Theme.of(context).colorScheme;
+    final sections = <({String label, IconData icon, Color color, Widget Function() build})>[
+      (
+        label: ar ? 'المرتجعات' : 'Retours',
+        icon: Icons.assignment_return_rounded,
+        color: scheme.tertiary,
+        build: () => const ReturnsScreen(),
+      ),
+      (
+        label: ar ? 'الدفع عند الاستلام' : 'COD',
+        icon: Icons.local_shipping_rounded,
+        color: scheme.primary,
+        build: () => const CodManagerScreen(),
+      ),
+      (
+        label: ar ? 'المصاريف' : 'Profit',
+        icon: Icons.query_stats_rounded,
+        color: AppColors.amber,
+        build: () => const ProfitScreen(),
+      ),
+    ];
+    void open(int index) {
+      AppHaptics.select();
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => sections[index].build()),
+      );
+    }
+
+    return Row(
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          Expanded(
+            child: _QuickActionTile(
+              label: sections[i].label,
+              icon: sections[i].icon,
+              color: sections[i].color,
+              onTap: () => open(i),
+            ),
+          ),
+          if (i < sections.length - 1) const SizedBox(width: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      padding: const EdgeInsetsDirectional.symmetric(
+        vertical: AppSpacing.md,
+      ),
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 19),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }

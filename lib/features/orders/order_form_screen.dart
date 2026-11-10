@@ -297,8 +297,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 
     if (_isEditing) {
       store.updateOrder(order);
+      store.updateOrderInFennecly(order);
     } else {
       store.addOrder(order);
+      // Phase 1: push the new order to the shared Supabase DB (orders + order_items).
+      store.createOrderInFennecly(order);
     }
 
     if (!mounted) return;

@@ -10,6 +10,7 @@ import '../../domain/models/algeria_geo.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 import '../services/fennecly_data_service.dart';
+import '../services/fennecly_supabase.dart';
 import 'demo_data.dart';
 
 enum DashboardPeriod { days7, days30, all }
@@ -19,6 +20,63 @@ class DailyRevenue {
 
   final DateTime day;
   final double value;
+}
+
+/// Operating expense (web parity: private `expenses` table —
+/// categories ads | packaging | salary | rent | software | other).
+class Expense {
+  const Expense({
+    required this.id,
+    required this.date,
+    required this.category,
+    required this.amount,
+    this.note = '',
+    this.remoteId,
+  });
+
+  final String id;
+  final DateTime date;
+  final String category;
+  final double amount;
+  final String note;
+  final String? remoteId;
+
+  Expense copyWith({DateTime? date, String? category, double? amount, String? note}) =>
+      Expense(
+        id: id,
+        date: date ?? this.date,
+        category: category ?? this.category,
+        amount: amount ?? this.amount,
+        note: note ?? this.note,
+        remoteId: remoteId,
+      );
+
+  Expense withRemoteId(String remoteId) => Expense(
+        id: id,
+        date: date,
+        category: category,
+        amount: amount,
+        note: note,
+        remoteId: remoteId,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String(),
+        'category': category,
+        'amount': amount,
+        'note': note,
+        if (remoteId != null) 'remoteId': remoteId,
+      };
+
+  factory Expense.fromJson(Map<String, dynamic> json) => Expense(
+        id: (json['id'] ?? '').toString(),
+        date: DateTime.tryParse((json['date'] ?? '').toString()) ?? DateTime.now(),
+        category: (json['category'] ?? 'other').toString(),
+        amount: (json['amount'] as num?)?.toDouble() ?? 0,
+        note: (json['note'] ?? '').toString(),
+        remoteId: json['remoteId']?.toString(),
+      );
 }
 
 class AppStore extends ChangeNotifier {
@@ -41,9 +99,11 @@ class AppStore extends ChangeNotifier {
   static const _kFenneclyLastSync = 'orderbox.fennecly.lastSync';
   static const _kDataSource = 'orderbox.dataSource'; // local | fennecly
   static const _kMigratedToDrift = 'orderbox.migrated.drift.v3';
+  static const _kExpenses = 'orderbox.expenses.v1';
 
   List<Order> _orders = [];
   List<Product> _products = [];
+  List<Expense> _expenses = [];
   ThemeMode _themeMode = ThemeMode.system;
   Locale _locale = const Locale('ar');
   bool _onboardingDone = false;
@@ -194,6 +254,7 @@ class AppStore extends ChangeNotifier {
     final lastSyncRaw = _prefs.getString(_kFenneclyLastSync);
     _fenneclyLastSync = lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw);
     _loadShippingOptions();
+    _loadExpenses();
 
     await _migrateLegacyPrefsToDriftIfNeeded();
 
@@ -537,10 +598,202 @@ class AppStore extends ChangeNotifier {
         .fold(0.0, (s, o) => s + o.total);
   }
 
+  // ---------------------------------------------------------------------------
+  // Expenses (profit page) — local-first with remote write-through to the
+  // webapp `expenses` table when signed in.
+  // ---------------------------------------------------------------------------
+  List<Expense> get expenses {
+    final list = [..._expenses];
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  double get expensesTotal =>
+      _expenses.fold(0.0, (sum, e) => sum + e.amount);
+
+  void _loadExpenses() {
+    final raw = _prefs.getString(_kExpenses);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      _expenses = decoded
+          .map((e) => Expense.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {}
+  }
+
+  void _persistExpenses() {
+    _prefs.setString(
+      _kExpenses,
+      jsonEncode(_expenses.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  void addExpense(Expense expense) {
+    _expenses.add(expense);
+    _persistExpenses();
+    notifyListeners();
+    _syncExpense(expense, deleting: false);
+  }
+
+  void updateExpense(Expense expense) {
+    final index = _expenses.indexWhere((e) => e.id == expense.id);
+    if (index == -1) return;
+    _expenses[index] = expense;
+    _persistExpenses();
+    notifyListeners();
+    _syncExpense(_expenses[index], deleting: false);
+  }
+
+  void deleteExpense(Expense expense) {
+    _expenses.removeWhere((e) => e.id == expense.id);
+    _persistExpenses();
+    notifyListeners();
+    _syncExpense(expense, deleting: true);
+  }
+
+  void _syncExpense(Expense expense, {required bool deleting}) {
+    if (!FenneclySupabase.isLoggedIn) return;
+    // Fire and forget: never block the UI on the shared DB.
+    Future<void>(() async {
+      try {
+        final storeInfo = await FenneclyDataService.resolveCurrentStore();
+        final ownerId =
+            storeInfo?.ownerId ?? FenneclySupabase.client.auth.currentUser?.id ?? '';
+        final storeId = storeInfo?.id ?? '';
+        if (deleting) {
+          final remoteId = expense.remoteId;
+          if (remoteId != null && remoteId.isNotEmpty) {
+            await FenneclyDataService.deleteExpense(expenseId: remoteId);
+          }
+          return;
+        }
+        final date = expense.date;
+        final remoteId = await FenneclyDataService.upsertExpense(
+          expenseId: expense.remoteId,
+          ownerId: ownerId,
+          storeId: storeId,
+          expenseDate:
+              '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          category: expense.category,
+          amount: expense.amount,
+          note: expense.note.isEmpty ? null : expense.note,
+        );
+        if (remoteId != null && remoteId.isNotEmpty) {
+          final index = _expenses.indexWhere((e) => e.id == expense.id);
+          if (index != -1) {
+            _expenses[index] = _expenses[index].withRemoteId(remoteId);
+            _persistExpenses();
+          }
+        }
+      } catch (_) {}
+    });
+  }
+
   void deleteOrder(String id) {
     _orders.removeWhere((order) => order.id == id);
     _persistOrders();
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------
+  // Phase 1: remote (Fennecly Supabase) write-through for orders.
+  // Mirrors the webapp createOrder/updateOrder server actions so the mobile
+  // app can create/edit orders in the shared DB, not only locally.
+  // ---------------------------------------------------------------------
+  Future<void> createOrderInFennecly(Order order) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final storeInfo = await FenneclyDataService.resolveCurrentStore();
+      final ownerId = storeInfo?.ownerId ?? FenneclySupabase.client.auth.currentUser?.id ?? '';
+      final slug = storeInfo?.slug ?? 'store-${ownerId.substring(0, 8)}';
+      final deliveryType = order.deliveryType == 'office' ? 'stopdesk' : 'domicile';
+      final orderId = await FenneclyDataService.createOrder(
+        storeOwnerId: ownerId,
+        storeSlug: slug,
+        customerName: order.customerName,
+        customerEmail: '',
+        customerPhone: order.phone,
+        shippingAddress: order.address,
+        shippingCity: order.commune,
+        shippingPostalCode: order.wilayaCode,
+        shippingCountry: 'Algeria',
+        subtotal: order.subtotal,
+        total: order.total,
+        status: order.status.fenneclyId,
+        deliveryType: deliveryType,
+        notes: order.notes,
+        source: _dataSource == 'fennecly' ? 'fennecly' : 'mobile',
+        items: <Map<String, dynamic>>[
+          <String, dynamic>{
+            'product_id': order.productId,
+            'product_name': order.productName,
+            'unit_price': order.unitPrice,
+            'quantity': order.quantity,
+            'image_url': null,
+          },
+        ],
+      );
+      if (orderId != null && orderId != order.id) {
+        updateOrder(Order(
+          id: orderId,
+          reference: order.reference,
+          customerName: order.customerName,
+          phone: order.phone,
+          wilayaCode: order.wilayaCode,
+          wilayaName: order.wilayaName,
+          wilayaNameAr: order.wilayaNameAr,
+          commune: order.commune,
+          address: order.address,
+          productId: order.productId,
+          productName: order.productName,
+          quantity: order.quantity,
+          unitPrice: order.unitPrice,
+          costPrice: order.costPrice,
+          deliveryPrice: order.deliveryPrice,
+          status: order.status,
+          createdAt: order.createdAt,
+          notes: order.notes,
+          deliveryCompany: order.deliveryCompany,
+          deliveryType: order.deliveryType,
+          trackingNumber: order.trackingNumber,
+          codPaidByCompany: order.codPaidByCompany,
+        ));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> updateOrderInFennecly(Order order) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final storeInfo = await FenneclyDataService.resolveCurrentStore();
+      final ownerId = storeInfo?.ownerId ?? FenneclySupabase.client.auth.currentUser?.id ?? '';
+      await FenneclyDataService.updateOrder(
+        orderId: order.id,
+        storeOwnerId: ownerId,
+        customerName: order.customerName,
+        customerPhone: order.phone,
+        shippingAddress: order.address,
+        shippingCity: order.commune,
+        shippingPostalCode: order.wilayaCode,
+        notes: order.notes,
+        subtotal: order.subtotal,
+        total: order.total,
+        status: order.status.fenneclyId,
+        deliveryType: order.deliveryType == 'office' ? 'stopdesk' : 'domicile',
+        deliveryCompany: order.deliveryCompany,
+        trackingNumber: order.trackingNumber,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> deleteOrderInFennecly(Order order) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final storeInfo = await FenneclyDataService.resolveCurrentStore();
+      final ownerId = storeInfo?.ownerId ?? FenneclySupabase.client.auth.currentUser?.id ?? '';
+      await FenneclyDataService.deleteOrder(orderId: order.id, storeOwnerId: ownerId);
+    } catch (_) {}
   }
 
   // ---------------------------------------------------------------------
@@ -564,6 +817,53 @@ class AppStore extends ChangeNotifier {
     _products.removeWhere((product) => product.id == id);
     _persistProducts();
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------
+  // Phase 1: remote (Fennecly Supabase) product write-through — create /
+  // update incl. product_costs + stock, delete (products + product_costs).
+  // ---------------------------------------------------------------------
+  Future<void> createProductInFennecly(Product product) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final ownerId = FenneclySupabase.client.auth.currentUser?.id ?? '';
+      final created = await FenneclyDataService.upsertProduct(
+        ownerId: ownerId,
+        name: product.name,
+        price: product.price,
+        cost: product.cost > 0 ? product.cost : null,
+        stock: product.stock,
+      );
+      if (created) addProduct(product);
+    } catch (_) {}
+  }
+
+  Future<void> updateProductInFennecly(Product product) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final ownerId = FenneclySupabase.client.auth.currentUser?.id ?? '';
+      final updated = await FenneclyDataService.updateProduct(
+        productId: product.id,
+        ownerId: ownerId,
+        name: product.name,
+        price: product.price,
+        cost: product.cost > 0 ? product.cost : null,
+        stock: product.stock,
+      );
+      if (updated) updateProduct(product);
+    } catch (_) {}
+  }
+
+  Future<void> deleteProductInFennecly(Product product) async {
+    if (!FenneclySupabase.isLoggedIn) return;
+    try {
+      final ownerId = FenneclySupabase.client.auth.currentUser?.id ?? '';
+      final deleted = await FenneclyDataService.deleteProduct(
+        productId: product.id,
+        ownerId: ownerId,
+      );
+      if (deleted) deleteProduct(product.id);
+    } catch (_) {}
   }
 
   // ---------------------------------------------------------------------

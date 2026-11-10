@@ -10,6 +10,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_snackbar.dart';
+import '../auth/forgot_password_screen.dart';
+import '../auth/signup_screen.dart';
 import '../shell/home_shell.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,6 +66,24 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _error = e.message);
     } catch (e) {
       setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      // Phase 1: optional Google sign-in (Fennecly parity).
+      await FenneclySupabase.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'https://fennecly.online/login',
+      );
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -168,6 +188,33 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   },
                             child: Text(ar ? 'متابعة بدون حساب' : 'Continuer sans compte'),
+                          ),
+                          TextButton(
+                            onPressed: _loading
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                                    );
+                                  },
+                            child: Text(ar ? 'نسيت كلمة المرور؟' : 'Mot de passe oublié ?'),
+                          ),
+                          TextButton(
+                            onPressed: _loading
+                                ? null
+                                : () {
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                                      (route) => false,
+                                    );
+                                  },
+                            child: Text(ar ? 'إنشاء حساب جديد' : 'Créer un compte'),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          OutlinedButton.icon(
+                            onPressed: _loading ? null : _signInWithGoogle,
+                            icon: const Icon(Icons.android_rounded),
+                            label: Text(ar ? 'المتابعة عبر Google' : 'Continuer avec Google'),
                           ),
                         ],
                       ),

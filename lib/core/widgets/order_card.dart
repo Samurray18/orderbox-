@@ -16,11 +16,19 @@ class OrderCard extends StatelessWidget {
     required this.order,
     required this.onTap,
     this.onWhatsApp,
+    this.showCheckbox = false,
+    this.checked = false,
+    this.onCheckboxChanged,
   });
 
   final Order order;
   final VoidCallback onTap;
   final VoidCallback? onWhatsApp;
+
+  /// Bulk-select mode (Orders screen): shows a checkbox on every card.
+  final bool showCheckbox;
+  final bool checked;
+  final ValueChanged<bool?>? onCheckboxChanged;
 
   bool get _canContact {
     return order.status == OrderStatus.newOrder ||
@@ -36,7 +44,7 @@ class OrderCard extends StatelessWidget {
     final arabic = l10n.isArabic;
 
     return SoftCard(
-      onTap: onTap,
+      onTap: showCheckbox ? null : onTap,
       padding: const EdgeInsetsDirectional.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,6 +52,19 @@ class OrderCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (showCheckbox) ...[
+                SizedBox(
+                  width: 24,
+                  child: Checkbox(
+                    value: checked,
+                    onChanged: onCheckboxChanged,
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
               InitialsAvatar(name: order.customerName),
               const SizedBox(width: AppSpacing.sm),
               Expanded(

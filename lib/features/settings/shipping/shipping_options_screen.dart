@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/data/app_store.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/services/fennecly_data_service.dart';
 import '../../../core/services/fennecly_supabase.dart';
-import '../../../core/services/fennecly_sync_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
@@ -33,16 +33,14 @@ class _ShippingOptionsScreenState extends State<ShippingOptionsScreen> {
     }
     setState(() => _syncing = true);
     final store = context.read<AppStore>();
-    final res = await FenneclySyncService.syncShipping(store);
+    final res = await FenneclyDataService.syncAll(store);
     if (!mounted) return;
     setState(() => _syncing = false);
-    if (res.error == null) {
-      showAppSnackBar(context, ar
-          ? 'تمت المزامنة: ${res.companies} شركات، ${res.tariffs} تعرفة'
-          : 'Synchronisé : ${res.companies} sociétés, ${res.tariffs} tarifs');
-    } else {
-      showAppSnackBar(context, ar ? 'مزامنة جزئية' : 'Sync partielle', icon: Icons.info_outline_rounded);
-    }
+    final msg = ar
+        ? 'تمت المزامنة: ${res.orders} طلب، ${res.products} منتج، ${res.companies} شركات'
+        : 'Synchronisé : ${res.orders} commandes, ${res.products} produits, ${res.companies} sociétés';
+    showAppSnackBar(context, res.error == null ? msg : (ar ? '$msg (جزئي)' : '$msg (partiel)'),
+        icon: res.error == null ? Icons.cloud_done_rounded : Icons.info_outline_rounded);
   }
 
   @override

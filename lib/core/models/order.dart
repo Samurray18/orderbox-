@@ -20,11 +20,30 @@ extension OrderStatusX on OrderStatus {
   };
 
   static OrderStatus fromId(String? value) {
+    final v = (value ?? '').toLowerCase().trim();
+    if (v == 'pending' || v == 'new' || v == 'new_order') return OrderStatus.newOrder;
+    if (v == 'confirmed') return OrderStatus.confirmed;
+    if (v == 'shipped' || v == 'in_transit' || v == 'out_for_delivery') return OrderStatus.shipped;
+    if (v == 'delivered' || v == 'completed') return OrderStatus.delivered;
+    if (v == 'returned' || v == 'refunded') return OrderStatus.returned;
+    if (v == 'cancelled' || v == 'canceled') return OrderStatus.cancelled;
+    if (v == 'no_answer' || v == 'noanswer' || v == 'unreachable') return OrderStatus.noAnswer;
     return OrderStatus.values.firstWhere(
-      (status) => status.id == value,
+      (status) => status.id == v,
       orElse: () => OrderStatus.newOrder,
     );
   }
+
+  /// Map local status to Fennecly/webapp status values.
+  String get fenneclyId => switch (this) {
+    OrderStatus.newOrder => 'pending',
+    OrderStatus.confirmed => 'confirmed',
+    OrderStatus.shipped => 'shipped',
+    OrderStatus.delivered => 'delivered',
+    OrderStatus.returned => 'returned',
+    OrderStatus.cancelled => 'cancelled',
+    OrderStatus.noAnswer => 'pending',
+  };
 
   bool get isClosed =>
       this == OrderStatus.delivered ||

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/algeria_geo.dart';
 import '../models/order.dart';
 import '../models/product.dart';
+import '../services/fennecly_data_service.dart';
 import 'demo_data.dart';
 
 enum DashboardPeriod { days7, days30, all }
@@ -32,6 +33,10 @@ class AppStore extends ChangeNotifier {
   static const _kShipping = 'orderbox.shipping.v1';
   static const _kDeliveryCompanies = 'orderbox.delivery_companies.v1';
   static const _kDefaultCompany = 'orderbox.default_company.v1';
+  static const _kFenneclyStoreName = 'orderbox.fennecly.storeName';
+  static const _kFenneclyStoreId = 'orderbox.fennecly.storeId';
+  static const _kFenneclyLastSync = 'orderbox.fennecly.lastSync';
+  static const _kDataSource = 'orderbox.dataSource'; // local | fennecly
 
   List<Order> _orders = [];
   List<Product> _products = [];
@@ -40,6 +45,10 @@ class AppStore extends ChangeNotifier {
   bool _onboardingDone = false;
   bool _ready = false;
   String _customStoreName = '';
+  String _fenneclyStoreName = '';
+  String _fenneclyStoreId = '';
+  DateTime? _fenneclyLastSync;
+  String _dataSource = 'local';
   // Fennecly-inspired shipping options: delivery companies + wilaya home/office tariffs
   List<String> _deliveryCompanies = List<String>.from(AlgeriaGeo.deliveryCompanies);
   String _defaultDeliveryCompany = 'Yalidine';
@@ -57,9 +66,58 @@ class AppStore extends ChangeNotifier {
   bool get onboardingDone => _onboardingDone;
 
   String get customStoreName => _customStoreName;
+  String get fenneclyStoreName => _fenneclyStoreName;
+  String get fenneclyStoreId => _fenneclyStoreId;
+  DateTime? get fenneclyLastSync => _fenneclyLastSync;
+  bool get isFenneclyData => _dataSource == 'fennecly';
+  String get dataSource => _dataSource;
 
-  String storeNameOr(String fallback) =>
-      _customStoreName.trim().isEmpty ? fallback : _customStoreName.trim();
+  String storeNameOr(String fallback) {
+    if (_fenneclyStoreName.trim().isNotEmpty) return _fenneclyStoreName.trim();
+    return _customStoreName.trim().isEmpty ? fallback : _customStoreName.trim();
+  }
+
+  void setFenneclyStore({required String name, required String id}) {
+    _fenneclyStoreName = name.trim();
+    _fenneclyStoreId = id;
+    _dataSource = 'fennecly';
+    _prefs.setString(_kFenneclyStoreName, _fenneclyStoreName);
+    _prefs.setString(_kFenneclyStoreId, _fenneclyStoreId);
+    _prefs.setString(_kDataSource, _dataSource);
+    notifyListeners();
+  }
+
+  void markFenneclySynced() {
+    _dataSource = 'fennecly';
+    _fenneclyLastSync = DateTime.now();
+    _prefs.setString(_kDataSource, _dataSource);
+    _prefs.setString(_kFenneclyLastSync, _fenneclyLastSync!.toIso8601String());
+    notifyListeners();
+  }
+
+  void clearFenneclySource() {
+    _dataSource = 'local';
+    _fenneclyStoreName = '';
+    _fenneclyStoreId = '';
+    _fenneclyLastSync = null;
+    _prefs.setString(_kDataSource, _dataSource);
+    _prefs.remove(_kFenneclyStoreName);
+    _prefs.remove(_kFenneclyStoreId);
+    _prefs.remove(_kFenneclyLastSync);
+    notifyListeners();
+  }
+
+  void replaceOrders(List<Order> list) {
+    _orders = [...list];
+    _persistOrders();
+    notifyListeners();
+  }
+
+  void replaceProducts(List<Product> list) {
+    _products = [...list];
+    _persistProducts();
+    notifyListeners();
+  }
 
   // Shipping options (fennecly: delivery companies + wilaya home/office tariffs)
   List<String> get deliveryCompanies => List.unmodifiable(_deliveryCompanies);
@@ -126,12 +184,18 @@ class AppStore extends ChangeNotifier {
     );
     _onboardingDone = _prefs.getBool(_kOnboarding) ?? false;
     _customStoreName = _prefs.getString(_kStoreName) ?? '';
+    _fenneclyStoreName = _prefs.getString(_kFenneclyStoreName) ?? '';
+    _fenneclyStoreId = _prefs.getString(_kFenneclyStoreId) ?? '';
+    _dataSource = _prefs.getString(_kDataSource) ?? 'local';
+    final lastSyncRaw = _prefs.getString(_kFenneclyLastSync);
+    _fenneclyLastSync = lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw);
     _loadShippingOptions();
 
     final ordersRaw = _prefs.getString(_kOrders);
     if (ordersRaw == null) {
       _orders = DemoData.orders();
       _products = DemoData.products();
+      _dataSource = 'local';
       _persistOrders();
       _persistProducts();
     } else {
@@ -348,7 +412,14 @@ class AppStore extends ChangeNotifier {
       _adjustProductStock(order.productId, order.quantity);
     }
     updateOrder(order.copyWith(status: status));
+    // Same DB: push status to Fennecly when synced from Fennecly (UUID ids)
+    if (_dataSource == 'fennecly' && _isUuid(order.id)) {
+      FenneclyDataService.updateOrderStatus(order.id, status);
+    }
   }
+
+  bool _isUuid(String s) =>
+      RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(s);
 
   void _adjustProductStock(String productId, int delta) {
     if (productId.isEmpty || delta == 0) return;

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/fennecly_data_service.dart';
+import '../../core/services/fennecly_supabase.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_bottom_nav.dart';
 import '../../core/widgets/expanding_fab.dart';
+import '../../features/customers/customers_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/orders_screen.dart';
@@ -20,6 +26,23 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   final PageController _pageController = PageController();
   int _index = 0;
+  bool _autoSynced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoSync());
+  }
+
+  Future<void> _autoSync() async {
+    if (_autoSynced || !mounted) return;
+    _autoSynced = true;
+    if (!FenneclySupabase.isLoggedIn) return;
+    final store = context.read<AppStore>();
+    try {
+      await FenneclyDataService.syncAll(store);
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -78,6 +101,11 @@ class _HomeShellState extends State<HomeShell> {
         label: l10n.navProducts,
       ),
       NavDestination(
+        icon: Icons.people_alt_outlined,
+        selectedIcon: Icons.people_alt_rounded,
+        label: l10n.navCustomers,
+      ),
+      NavDestination(
         icon: Icons.dashboard_outlined,
         selectedIcon: Icons.dashboard_rounded,
         label: l10n.navDashboard,
@@ -90,6 +118,7 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    const settingsIndex = 4;
 
     return Scaffold(
       body: Stack(
@@ -98,8 +127,9 @@ class _HomeShellState extends State<HomeShell> {
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              OrdersScreen(onOpenSettings: () => _select(3)),
+              OrdersScreen(onOpenSettings: () => _select(settingsIndex)),
               ProductsScreen(onViewOrders: () => _select(0)),
+              const CustomersScreen(),
               DashboardScreen(onViewOrders: () => _select(0)),
               const SettingsScreen(),
             ],

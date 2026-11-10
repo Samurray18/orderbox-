@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/fennecly_data_service.dart';
 import '../../core/services/fennecly_supabase.dart';
-import '../../core/services/fennecly_sync_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/haptics.dart';
@@ -47,17 +47,15 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _password.text,
       );
       if (!mounted) return;
-      // Pull shipping tariffs/delivery companies/data from fennecly DB
+      // Pull the same account data shown on fennecly.online (store, products, orders, shipping)
       final store = context.read<AppStore>();
-      final res = await FenneclySyncService.syncShipping(store);
+      final res = await FenneclyDataService.syncAll(store);
       if (!mounted) return;
       AppHaptics.success();
-      final msg = res.error == null
-          ? (l10n.isArabic
-              ? 'تم تسجيل الدخول ومزامنة بيانات الشحن (${res.companies} شركات، ${res.tariffs} تعرفة)'
-              : 'Connecté. Données livraison synchronisées (${res.companies} sociétés, ${res.tariffs} tarifs)')
-          : (l10n.isArabic ? 'تم تسجيل الدخول (المزامنة جزئية)' : 'Connecté (sync partielle)');
-      showAppSnackBar(context, msg);
+      final msg = l10n.isArabic
+          ? 'تمت مزامنة Fennecly: ${res.orders} طلب، ${res.products} منتج، ${res.customers} عميل'
+          : 'Fennecly synchronisé : ${res.orders} commandes, ${res.products} produits, ${res.customers} clients';
+      showAppSnackBar(context, res.error == null ? msg : (l10n.isArabic ? '$msg (جزئي)' : '$msg (partiel)'));
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeShell()),
         (_) => false,
@@ -112,8 +110,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 4),
                           Text(
                             ar
-                                ? 'استخدم نفس حساب Fennecly (قاعدة البيانات المشتركة)'
-                                : 'Utilisez votre compte Fennecly (même base de données)',
+                                ? 'نفس حساب fennecly.online — ستظهر نفس الطلبات والمنتجات والعملاء'
+                                : 'Même compte que fennecly.online — mêmes commandes, produits et clients',
                             textAlign: TextAlign.center,
                             style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                           ),

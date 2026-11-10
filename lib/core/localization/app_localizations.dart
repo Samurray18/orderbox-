@@ -39,8 +39,17 @@ class AppLocalizations {
   // ---------------------------------------------------------------------
   String get navOrders => _t('Commandes', 'الطلبات');
   String get navProducts => _t('Produits', 'المنتجات');
+  String get navCustomers => _t('Clients', 'العملاء');
   String get navDashboard => _t('Tableau', 'لوحة التحكم');
   String get navSettings => _t('Réglages', 'الإعدادات');
+  String get syncFennecly => _t('Synchroniser Fennecly', 'مزامنة Fennecly');
+  String get syncedFromFennecly => _t('Données Fennecly synchronisées', 'تمت مزامنة بيانات Fennecly');
+  String get fenneclySameDb => _t('Même base que fennecly.online', 'نفس قاعدة بيانات fennecly.online');
+  String get customersTitle => _t('Clients', 'العملاء');
+  String get noCustomersTitle => _t('Aucun client', 'لا يوجد عملاء');
+  String get noCustomersBody => _t('Les clients apparaîtront ici à partir des commandes.', 'سيظهر العملاء هنا من خلال الطلبات.');
+  String get totalSpent => _t('Total dépensé', 'إجمالي الإنفاق');
+  String get ordersWord => _t('commandes', 'طلبات');
 
   // ---------------------------------------------------------------------
   // Common

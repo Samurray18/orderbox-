@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/fennecly_data_service.dart';
 import '../../core/services/fennecly_supabase.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_snackbar.dart';
-import '../../core/widgets/confirm_dialog.dart';
 import '../../core/widgets/confirm_dialog.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/soft_card.dart';
@@ -25,6 +24,27 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool _syncing = false;
+
+  Future<void> _syncFennecly() async {
+    final l10n = AppLocalizations.of(context);
+    if (!FenneclySupabase.isLoggedIn) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      if (mounted) setState(() {});
+      return;
+    }
+    setState(() => _syncing = true);
+    final store = context.read<AppStore>();
+    final res = await FenneclyDataService.syncAll(store);
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    AppHaptics.success();
+    final msg = l10n.isArabic
+        ? 'تمت مزامنة Fennecly: ${res.orders} طلب، ${res.products} منتج، ${res.customers} عميل'
+        : 'Fennecly synchronisé : ${res.orders} commandes, ${res.products} produits, ${res.customers} clients';
+    showAppSnackBar(context, res.error == null ? msg : (l10n.isArabic ? '$msg (جزئي)' : '$msg (partiel)'));
+  }
+
   Future<void> _editStoreName() async {
     final store = context.read<AppStore>();
     final l10n = AppLocalizations.of(context);
@@ -283,6 +303,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   children: [
                     _SettingsTile(
+                      icon: Icons.cloud_sync_rounded,
+                      color: FenneclySupabase.isLoggedIn ? AppColors.mintDeep : scheme.onSurfaceVariant,
+                      title: l10n.syncFennecly,
+                      body: _syncing
+                          ? (l10n.isArabic ? 'جارٍ مزامنة نفس بيانات fennecly.online…' : 'Synchronisation des données fennecly.online…')
+                          : (store.isFenneclyData && store.fenneclyLastSync != null
+                              ? (l10n.isArabic
+                                  ? 'نفس قاعدة البيانات • ${store.orders.length} طلب • ${store.products.length} منتج'
+                                  : 'Même base • ${store.orders.length} cmd • ${store.products.length} produits')
+                              : l10n.fenneclySameDb),
+                      onTap: _syncing ? () {} : _syncFennecly,
+                    ),
+                    Divider(color: scheme.outlineVariant, height: 1),
+                    _SettingsTile(
                       icon: Icons.local_shipping_rounded,
                       color: scheme.primary,
                       title: l10n.isArabic ? 'خيارات الشحن' : 'Options de livraison',
@@ -307,6 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (FenneclySupabase.isLoggedIn) {
                           await FenneclySupabase.client.auth.signOut();
                           if (!context.mounted) return;
+                          context.read<AppStore>().clearFenneclySource();
                           setState(() {});
                           showAppSnackBar(context, l10n.isArabic ? 'تم تسجيل الخروج' : 'Déconnecté');
                         } else {

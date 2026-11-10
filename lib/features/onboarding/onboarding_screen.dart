@@ -8,6 +8,8 @@ import '../../core/models/order.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/services/fennecly_supabase.dart';
+import '../../features/auth/login_screen.dart';
 import '../../features/shell/home_shell.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -29,10 +31,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _finish() {
     context.read<AppStore>().completeOnboarding();
+    final target = FenneclySupabase.isLoggedIn ? const HomeShell() : const LoginScreen();
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 520),
-        pageBuilder: (_, __, ___) => const HomeShell(),
+        pageBuilder: (_, __, ___) => target,
         transitionsBuilder: (_, animation, __, child) {
           final curved = CurvedAnimation(
             parent: animation,

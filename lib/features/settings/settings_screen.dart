@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/fennecly_supabase.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
@@ -12,6 +13,7 @@ import '../../core/widgets/confirm_dialog.dart';
 import '../../core/widgets/confirm_dialog.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/soft_card.dart';
+import '../../features/auth/login_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import 'shipping/shipping_options_screen.dart';
 
@@ -292,6 +294,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           builder: (_) => const ShippingOptionsScreen(),
                         ),
                       ),
+                    ),
+                    Divider(color: scheme.outlineVariant, height: 1),
+                    _SettingsTile(
+                      icon: Icons.account_circle_rounded,
+                      color: FenneclySupabase.isLoggedIn ? AppColors.mintDeep : scheme.onSurfaceVariant,
+                      title: l10n.isArabic ? 'حساب Fennecly' : 'Compte Fennecly',
+                      body: FenneclySupabase.isLoggedIn
+                          ? (FenneclySupabase.client.auth.currentUser?.email ?? (l10n.isArabic ? 'متصل' : 'Connecté'))
+                          : (l10n.isArabic ? 'غير متصل — تسجيل الدخول' : 'Non connecté — Se connecter'),
+                      onTap: () async {
+                        if (FenneclySupabase.isLoggedIn) {
+                          await FenneclySupabase.client.auth.signOut();
+                          if (!context.mounted) return;
+                          setState(() {});
+                          showAppSnackBar(context, l10n.isArabic ? 'تم تسجيل الخروج' : 'Déconnecté');
+                        } else {
+                          await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+                          if (context.mounted) setState(() {});
+                        }
+                      },
                     ),
                     Divider(color: scheme.outlineVariant, height: 1),
                     _SettingsTile(

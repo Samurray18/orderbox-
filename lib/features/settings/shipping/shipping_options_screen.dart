@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/data/app_store.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/services/fennecly_supabase.dart';
+import '../../../core/services/fennecly_sync_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
@@ -21,6 +23,27 @@ class ShippingOptionsScreen extends StatefulWidget {
 
 class _ShippingOptionsScreenState extends State<ShippingOptionsScreen> {
   String _search = '';
+  bool _syncing = false;
+
+  Future<void> _syncFromFennecly() async {
+    final ar = AppLocalizations.of(context).isArabic;
+    if (!FenneclySupabase.isLoggedIn) {
+      showAppSnackBar(context, ar ? 'سجّل الدخول بحساب Fennecly أولاً' : 'Connectez-vous avec Fennecly d’abord');
+      return;
+    }
+    setState(() => _syncing = true);
+    final store = context.read<AppStore>();
+    final res = await FenneclySyncService.syncShipping(store);
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    if (res.error == null) {
+      showAppSnackBar(context, ar
+          ? 'تمت المزامنة: ${res.companies} شركات، ${res.tariffs} تعرفة'
+          : 'Synchronisé : ${res.companies} sociétés, ${res.tariffs} tarifs');
+    } else {
+      showAppSnackBar(context, ar ? 'مزامنة جزئية' : 'Sync partielle', icon: Icons.info_outline_rounded);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +64,15 @@ class _ShippingOptionsScreenState extends State<ShippingOptionsScreen> {
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Text(ar ? 'خيارات الشحن' : 'Options de livraison'),
+        actions: [
+          IconButton(
+            tooltip: ar ? 'مزامنة من Fennecly' : 'Sync Fennecly',
+            onPressed: _syncing ? null : _syncFromFennecly,
+            icon: _syncing
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.cloud_sync_rounded),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsetsDirectional.fromSTEB(

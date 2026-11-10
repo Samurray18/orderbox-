@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../../core/data/app_store.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/fennecly_supabase.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../features/auth/login_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/shell/home_shell.dart';
 
@@ -74,9 +76,14 @@ class _SplashScreenState extends State<SplashScreen>
     if (_navigated || !mounted) return;
     _navigated = true;
     final store = context.read<AppStore>();
-    final target = store.onboardingDone
-        ? const HomeShell()
-        : const OnboardingScreen();
+    final Widget target;
+    if (!store.onboardingDone) {
+      target = const OnboardingScreen();
+    } else if (!FenneclySupabase.isLoggedIn) {
+      target = const LoginScreen();
+    } else {
+      target = const HomeShell();
+    }
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 620),

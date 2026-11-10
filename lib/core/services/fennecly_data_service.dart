@@ -58,6 +58,35 @@ class FenneclySyncResult {
 class FenneclyDataService {
   static SupabaseClient get _db => FenneclySupabase.client;
 
+  static Future<List<FenneclyStoreInfo>> listStores() async {
+    final user = _db.auth.currentUser;
+    if (user == null) return const [];
+    try {
+      final res = await _db
+          .from('stores')
+          .select('id,owner_id,name,slug,currency,is_default,is_active,created_at')
+          .eq('owner_id', user.id)
+          .order('created_at', ascending: true);
+      if (res is! List) return const [];
+      return res
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .where((s) => s['is_active'] != false)
+          .map(FenneclyStoreInfo.fromMap)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static Future<void> switchStore(String storeId) async {
+    final user = _db.auth.currentUser;
+    if (user == null) return;
+    try {
+      await _db.from('profiles').update({'current_store_id': storeId}).eq('id', user.id);
+    } catch (_) {}
+  }
+
   /// Resolve current store the same way the webapp does.
   static Future<FenneclyStoreInfo?> resolveCurrentStore() async {
     final user = _db.auth.currentUser;
@@ -241,9 +270,11 @@ class FenneclyDataService {
     }
     if (rows.isEmpty) return const [];
 
-    // fetch items for these orders
     final ids = rows.whereType<Map>().map((r) => (r['id'] ?? '').toString()).where((s) => s.isNotEmpty).toList();
     final itemsByOrder = <String, List<Map<String, dynamic>>>{};
+    final shipByOrder = <String, Map<String, dynamic>>{};
+    final companyNames = await _fetchCompanyNames();
+
     for (var i = 0; i < ids.length; i += 100) {
       final chunk = ids.sublist(i, i + 100 > ids.length ? ids.length : i + 100);
       try {
@@ -256,45 +287,92 @@ class FenneclyDataService {
           }
         }
       } catch (_) {}
+      try {
+        final res = await _db.from('shipments').select('*').inFilter('order_id', chunk);
+        if (res is List) {
+          for (final sh in res.whereType<Map>()) {
+            final m = Map<String, dynamic>.from(sh);
+            final oid = (m['order_id'] ?? '').toString();
+            // keep latest/first if multiple
+            shipByOrder.putIfAbsent(oid, () => m);
+          }
+        }
+      } catch (_) {}
     }
 
     return rows
         .whereType<Map>()
-        .map((r) => _mapOrder(Map<String, dynamic>.from(r), itemsByOrder[(r['id'] ?? '').toString()] ?? const []))
+        .map((r) => _mapOrder(
+              Map<String, dynamic>.from(r),
+              itemsByOrder[(r['id'] ?? '').toString()] ?? const [],
+              shipByOrder[(r['id'] ?? '').toString()],
+              companyNames,
+            ))
         .toList();
   }
 
-  static Order _mapOrder(Map<String, dynamic> r, List<Map<String, dynamic>> items) {
+  static Future<Map<String, String>> _fetchCompanyNames() async {
+    final map = <String, String>{};
+    try {
+      final res = await _db.from('delivery_companies').select('id,name');
+      if (res is List) {
+        for (final r in res.whereType<Map>()) {
+          final id = (r['id'] ?? '').toString();
+          final name = (r['name'] ?? '').toString();
+          if (id.isNotEmpty && name.isNotEmpty) map[id] = name;
+        }
+      }
+    } catch (_) {}
+    return map;
+  }
+
+  static Order _mapOrder(
+    Map<String, dynamic> r,
+    List<Map<String, dynamic>> items,
+    Map<String, dynamic>? shipment,
+    Map<String, String> companyNames,
+  ) {
     final created = DateTime.tryParse((r['created_at'] ?? '').toString()) ?? DateTime.now();
     final wilayaRaw = (r['shipping_wilaya'] ?? '').toString();
     final w = _resolveWilaya(wilayaRaw);
     final subtotal = (_num(r['subtotal']) ?? 0).toDouble();
     final total = (_num(r['total']) ?? 0).toDouble();
-    // infer delivery fee: (total - subtotal) if sensible, else 0
     var delivery = total - subtotal;
     if (delivery < 0 || delivery > 50000) delivery = 0;
-    final deliveryType = (r['delivery_type'] ?? 'home').toString();
+    final rawType = (shipment?['delivery_type'] ?? r['delivery_type'] ?? 'home').toString().toLowerCase();
+    final deliveryType = (rawType.contains('stop') || rawType.contains('desk') || rawType.contains('office') || rawType.contains('bureau')) ? 'office' : 'home';
     String productName = '';
     String productId = '';
     int quantity = 0;
-    double unitPrice = 0;
+    double unitSum = 0;
     if (items.isNotEmpty) {
-      productName = items.map((it) => (it['product_name'] ?? '').toString()).where((s) => s.isNotEmpty).join(', ');
+      final names = items.map((it) => (it['product_name'] ?? '').toString()).where((s) => s.isNotEmpty).toList();
+      productName = names.length <= 2 ? names.join(', ') : '${names.take(2).join(', ')} +${names.length - 2}';
       productId = (items.first['product_id'] ?? '').toString();
       for (final it in items) {
-        quantity += (_num(it['quantity']) ?? 1).toInt();
-        unitPrice += (_num(it['unit_price']) ?? 0).toDouble() * ((_num(it['quantity']) ?? 1).toInt());
+        final q = (_num(it['quantity']) ?? 1).toInt();
+        quantity += q;
+        unitSum += (_num(it['unit_price']) ?? 0).toDouble() * q;
       }
-      if (quantity > 0) unitPrice = unitPrice / quantity; else { quantity = 1; unitPrice = subtotal; }
+      if (quantity > 0) {
+        unitSum = unitSum / quantity;
+      } else {
+        quantity = 1;
+        unitSum = subtotal;
+      }
     } else {
       productName = (r['notes'] ?? '—').toString();
       if (productName.length > 60) productName = '${productName.substring(0, 57)}...';
       quantity = 1;
-      unitPrice = subtotal;
+      unitSum = subtotal;
     }
     final status = OrderStatusX.fromId(r['status']?.toString());
     final id = (r['id'] ?? '').toString();
     final shortRef = id.length > 8 ? id.substring(0, 8).toUpperCase() : id.toUpperCase();
+    final tracking = (shipment?['tracking_number'] ?? r['tracking_number'] ?? '').toString();
+    final companyId = (shipment?['company_id'] ?? '').toString();
+    final deliveryCompany = companyNames[companyId] ?? '';
+    final payStatus = (r['payment_status'] ?? '').toString().toLowerCase();
     return Order(
       id: id,
       reference: 'FN-$shortRef',
@@ -308,16 +386,16 @@ class FenneclyDataService {
       productId: productId,
       productName: productName.isEmpty ? '—' : productName,
       quantity: quantity <= 0 ? 1 : quantity,
-      unitPrice: unitPrice,
+      unitPrice: unitSum,
       costPrice: 0,
       deliveryPrice: delivery,
       status: status,
       createdAt: created,
       notes: (r['notes'] ?? '').toString(),
-      deliveryCompany: '',
-      deliveryType: deliveryType.contains('stop') || deliveryType.contains('desk') || deliveryType.contains('office') || deliveryType.contains('bureau') ? 'office' : 'home',
-      trackingNumber: (r['tracking_number'] ?? '').toString(),
-      codPaidByCompany: (r['payment_status'] ?? '').toString().toLowerCase() == 'paid',
+      deliveryCompany: deliveryCompany,
+      deliveryType: deliveryType,
+      trackingNumber: tracking,
+      codPaidByCompany: payStatus == 'paid' || payStatus == 'collected',
     );
   }
 

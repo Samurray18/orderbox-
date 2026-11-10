@@ -45,6 +45,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showAppSnackBar(context, res.error == null ? msg : (l10n.isArabic ? '$msg (جزئي)' : '$msg (partiel)'));
   }
 
+  Future<void> _pickFenneclyStore() async {
+    final l10n = AppLocalizations.of(context);
+    if (!FenneclySupabase.isLoggedIn) return;
+    showDialog<void>(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    final stores = await FenneclyDataService.listStores();
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    if (stores.isEmpty) {
+      showAppSnackBar(context, l10n.isArabic ? 'لا توجد متاجر لهذا الحساب' : 'Aucune boutique pour ce compte');
+      return;
+    }
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        final currentId = context.read<AppStore>().fenneclyStoreId;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
+                child: Text(l10n.isArabic ? 'اختر المتجر (نفس قاعدة البيانات)' : 'Choisir la boutique (même base)',
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+              for (final s in stores)
+                ListTile(
+                  leading: Icon(s.id == currentId ? Icons.radio_button_checked : Icons.storefront_outlined,
+                      color: s.id == currentId ? AppColors.mintDeep : null),
+                  title: Text(s.name),
+                  subtitle: Text(s.isDefault ? (l10n.isArabic ? 'افتراضي' : 'Par défaut') : s.currency),
+                  onTap: () => Navigator.of(ctx).pop(s.id),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (picked == null || !mounted) return;
+    await FenneclyDataService.switchStore(picked);
+    if (!mounted) return;
+    await _syncFennecly();
+  }
+
   Future<void> _editStoreName() async {
     final store = context.read<AppStore>();
     final l10n = AppLocalizations.of(context);
@@ -329,6 +374,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
+                    if (FenneclySupabase.isLoggedIn) ...[
+                      Divider(color: scheme.outlineVariant, height: 1),
+                      _SettingsTile(
+                        icon: Icons.storefront_rounded,
+                        color: scheme.primary,
+                        title: l10n.isArabic ? 'متجر Fennecly' : 'Boutique Fennecly',
+                        body: store.fenneclyStoreName.isNotEmpty
+                            ? '${store.fenneclyStoreName} • ${l10n.isArabic ? "تبديل/تحديث" : "Changer / actualiser"}'
+                            : (l10n.isArabic ? 'اختيار المتجر (نفس webapp)' : 'Choisir la boutique (comme le webapp)'),
+                        onTap: () => _pickFenneclyStore(),
+                      ),
+                    ],
                     Divider(color: scheme.outlineVariant, height: 1),
                     _SettingsTile(
                       icon: Icons.account_circle_rounded,

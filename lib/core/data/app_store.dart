@@ -105,7 +105,7 @@ class AppStore extends ChangeNotifier {
   List<Product> _products = [];
   List<Expense> _expenses = [];
   ThemeMode _themeMode = ThemeMode.system;
-  Locale _locale = const Locale('ar');
+  Locale _locale = const Locale('en');
   bool _onboardingDone = false;
   bool _ready = false;
   String _customStoreName = '';
@@ -231,14 +231,14 @@ class AppStore extends ChangeNotifier {
   // ---------------------------------------------------------------------
   Future<void> load() async {
     final savedLocale = _prefs.getString(_kLocale);
-    if (savedLocale == 'ar' || savedLocale == 'fr') {
+    if (savedLocale == 'ar' || savedLocale == 'fr' || savedLocale == 'en') {
       _locale = Locale(savedLocale!);
     } else {
       final systemLanguage =
           PlatformDispatcher.instance.locale.languageCode.toLowerCase();
-      _locale = systemLanguage == 'fr'
-          ? const Locale('fr')
-          : const Locale('ar');
+      _locale = (systemLanguage == 'ar' || systemLanguage == 'fr')
+          ? Locale(systemLanguage == 'ar' ? 'ar' : 'fr')
+          : const Locale('en');
     }
 
     final savedTheme = _prefs.getString(_kTheme);

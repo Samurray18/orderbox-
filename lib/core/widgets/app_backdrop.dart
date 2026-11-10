@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// Global background used by the shell and full-screen routes:
-/// a lavender gradient wash with soft, blurred purple blobs.
+/// Global background used by the shell and full-screen routes.
 ///
-/// Drawn as a child of [Stack]/[Scaffold] so scroll views simply
-/// render on top of it (use `Scaffold(backgroundColor: Colors.transparent)`).
+/// V2: a deep, atmospheric gradient with three soft colour blooms
+/// (primary lavender top-left, mint accent bottom-right and a warm pink
+/// top-right), plus a faint radial vignette to ground the screen.
 class AppBackdrop extends StatelessWidget {
   const AppBackdrop({super.key, required this.child});
 
@@ -18,58 +18,55 @@ class AppBackdrop extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const RepaintBoundary(
-          child: BackdropGradient(),
-        ),
-        // Top-left blob
+        const RepaintBoundary(child: BackdropGradient()),
         PositionedDirectional(
-          start: -118,
-          top: -118,
+          start: -150,
+          top: -150,
           child: _Blob(
-            size: 340,
-            color: AppColors.blobPurple,
-            dark: dark,
-          ),
-        ),
-        // Top-right blob
-        PositionedDirectional(
-          end: -138,
-          top: -84,
-          child: _Blob(
-            size: 300,
+            size: 420,
             color: AppColors.primary,
             dark: dark,
+            strength: dark ? 0.32 : 0.26,
           ),
         ),
-        // Lower-left blob
         PositionedDirectional(
-          start: -152,
-          bottom: 148,
+          end: -140,
+          top: -90,
           child: _Blob(
-            size: 320,
+            size: 330,
+            color: const Color(0xFFFF8FAF),
+            dark: dark,
+            strength: dark ? 0.22 : 0.22,
+          ),
+        ),
+        PositionedDirectional(
+          start: -160,
+          bottom: 120,
+          child: _Blob(
+            size: 380,
+            color: AppColors.mint,
+            dark: dark,
+            strength: dark ? 0.16 : 0.14,
+          ),
+        ),
+        PositionedDirectional(
+          end: -120,
+          top: 340,
+          child: _Blob(
+            size: 220,
             color: AppColors.blobPurple,
             dark: dark,
-            strength: 0.42,
+            strength: dark ? 0.22 : 0.22,
           ),
         ),
-        // Mid-right mint blob
-        PositionedDirectional(
-          end: -96,
-          top: 330,
-          child: _Blob(
-            size: 190,
-            color: AppColors.blobMint,
-            dark: dark,
-            strength: 0.38,
-          ),
-        ),
+        const RepaintBoundary(child: _Vignette()),
         child,
       ],
     );
   }
 }
 
-/// The actual gradient wash (kept separate for repaint isolation).
+/// The actual gradient wash (re-used standalone).
 class BackdropGradient extends StatelessWidget {
   const BackdropGradient({super.key});
 
@@ -78,7 +75,29 @@ class BackdropGradient extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: dark ? AppColors.backdropDark : AppColors.backdropLight,
+        gradient: dark ? AppColors.v2BackdropDark : AppColors.v2BackdropLight,
+      ),
+    );
+  }
+}
+
+class _Vignette extends StatelessWidget {
+  const _Vignette();
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(0, -0.7),
+          radius: 1.15,
+          colors: [
+            Colors.transparent,
+            (dark ? Colors.black : AppColors.primary).withValues(alpha: dark ? 0.30 : 0.05),
+          ],
+          stops: const [0.55, 1.0],
+        ),
       ),
     );
   }
@@ -89,7 +108,7 @@ class _Blob extends StatelessWidget {
     required this.size,
     required this.color,
     required this.dark,
-    this.strength = 0.55,
+    required this.strength,
   });
 
   final double size;
@@ -99,7 +118,7 @@ class _Blob extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alpha = dark ? strength * 0.55 : strength;
+    final alpha = dark ? strength * 0.85 : strength;
     return Container(
       width: size,
       height: size,

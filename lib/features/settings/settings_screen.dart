@@ -614,64 +614,76 @@ class _LanguageSelector extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final options = [
-      (const Locale('ar'), 'العربية', l10n.arabic),
+      (const Locale('en'), 'English', l10n.english),
       (const Locale('fr'), 'Français', l10n.french),
+      (const Locale('ar'), 'العربية', l10n.arabic),
     ];
 
     return Row(
-      children: options.map((option) {
-        final selected = option.$1.languageCode == locale.languageCode;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
-            child: GestureDetector(
-              onTap: () {
-                AppHaptics.select();
-                onChanged(option.$1);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsetsDirectional.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  gradient: selected ? AppColors.primaryGradient : null,
-                  color: selected
-                      ? null
-                      : scheme.surfaceContainerHigh.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: selected
-                      ? null
-                      : Border.all(color: scheme.outlineVariant),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      option.$2,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+      children: [
+        for (var i = 0; i < options.length; i++) ...[
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
+              child: GestureDetector(
+                onTap: () {
+                  AppHaptics.select();
+                  onChanged(options[i].$1);
+                },
+                child: Builder(
+                  builder: (context) {
+                    final selected =
+                        options[i].$1.languageCode == locale.languageCode;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        vertical: AppSpacing.md,
+                        horizontal: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: selected ? AppColors.primaryGradient : null,
                         color: selected
-                            ? AppColors.lightSurface
-                            : scheme.onSurface,
-                        fontWeight: FontWeight.w700,
+                            ? null
+                            : scheme.surfaceContainerHigh.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: selected
+                            ? null
+                            : Border.all(color: scheme.outlineVariant),
                       ),
-                    ),
-                    const Spacer(),
-                    if (selected)
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.lightSurface,
-                        size: AppSizes.iconMd,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            options[i].$2,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: selected
+                                      ? AppColors.lightSurface
+                                      : scheme.onSurface,
+                                ),
+                          ),
+                          const Spacer(),
+                          if (selected)
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.lightSurface,
+                              size: AppSizes.iconMd,
+                            ),
+                        ],
                       ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
           ),
-        );
-      }).toList(),
+        ],
+      ],
     );
   }
 }
-
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.icon,

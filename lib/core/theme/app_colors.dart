@@ -37,12 +37,23 @@ abstract final class AppColors {
 
   // Reference-spec tokens
   static const Color lavenderPill = Color(0xFFEDE6FF);
-  static const Color lavenderPillDark = Color(0xFF2E1A6B);
+  static const Color lavenderPillDark = Color(0xFF322058);
   static const Color blobPurple = Color(0xFFB39DFF);
   static const Color blobMint = Color(0xFF7FE3CB);
 
   /// Icon chip used in headers (lavender tint + primary icon).
   static const Color headerIconTint = Color(0xFFEDE8FF);
+  static const Color headerIconTintDark = Color(0xFF2E2350);
+
+  // V2 refined surfaces
+  static const Color v2LightTop = Color(0xFFF6F2FD);
+  static const Color v2LightBottom = Color(0xFFEDE7FB);
+  static const Color v2LightSurface = Color(0xFFFFFFFF);
+  static const Color v2DarkTop = Color(0xFF150F2A);
+  static const Color v2DarkBottom = Color(0xFF0B0818);
+  static const Color v2DarkSurface = Color(0xFF1C1432);
+  static const Color v2DarkSurfaceAlt = Color(0xFF241A3F);
+  static const Color v2DarkBorder = Color(0xFF332854);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
@@ -60,13 +71,33 @@ abstract final class AppColors {
 
   /// App-wide backdrop: lavender wash (light) / deep aubergine (dark).
   static const LinearGradient backdropLight = LinearGradient(
-    colors: [Color(0xFFF3EFFC), Color(0xFFEFE9FD), Color(0xFFF7F4FE)],
+    colors: [Color(0xFFF0ECFC), Color(0xFFE9E3FA), Color(0xFFF6F3FE)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient backdropDark = LinearGradient(
-    colors: [Color(0xFF120C22), Color(0xFF171029), Color(0xFF0C0917)],
+    colors: [Color(0xFF171026), Color(0xFF120C20), Color(0xFF0B0818)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  /// V2 backdrop: deeper, more elegant gradient.
+  static const LinearGradient v2BackdropLight = LinearGradient(
+    colors: [v2LightTop, v2LightBottom, v2LightTop],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient v2BackdropDark = LinearGradient(
+    colors: [v2DarkTop, v2DarkBottom],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  /// Subtle vertical fade for gradient cards (adds depth).
+  static const LinearGradient cardGloss = LinearGradient(
+    colors: [Color(0x22FFFFFF), Color(0x00FFFFFF)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

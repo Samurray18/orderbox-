@@ -16,6 +16,10 @@ class NavDestination {
   final String label;
 }
 
+/// Floating pill navigation bar.
+///
+/// V2: taller, softer radius, frosted surface, gradient pill for the
+/// active tab (purple gradient + glow shadow) instead of a flat tint.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -31,19 +35,22 @@ class AppBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: AppSizes.navHeight + AppSpacing.sm,
-      padding: const EdgeInsetsDirectional.all(AppSpacing.xxs + 2),
+      height: AppSizes.navHeight + 10,
+      padding: const EdgeInsetsDirectional.all(5),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: scheme.outlineVariant),
+        color: dark
+            ? scheme.surfaceContainerLowest.withValues(alpha: 0.9)
+            : scheme.surfaceContainerLowest.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.8)),
         boxShadow: [
           BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.10),
+            color: AppColors.primary.withValues(alpha: dark ? 0.25 : 0.18),
             blurRadius: 30,
-            offset: const Offset(0, 12),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -81,9 +88,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final texts = Theme.of(context).textTheme;
-    const duration = Duration(milliseconds: 280);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    const duration = Duration(milliseconds: 320);
 
     return Semantics(
       selected: selected,
@@ -92,54 +99,47 @@ class _NavItem extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderRadius: BorderRadius.circular(22),
           onTap: onTap,
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOutCubic,
-            margin: const EdgeInsetsDirectional.symmetric(horizontal: 3),
+            margin: const EdgeInsetsDirectional.symmetric(horizontal: 2),
             padding: EdgeInsetsDirectional.symmetric(
-              horizontal: selected ? 10 : 2,
+              horizontal: selected ? 8 : 2,
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: selected
-                  ? (dark ? AppColors.lavenderPillDark : AppColors.lavenderPill)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
+              gradient: selected ? AppColors.primaryGradient : null,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: dark ? 0.5 : 0.42),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : null,
+              borderRadius: BorderRadius.circular(22),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 1, end: selected ? 1.08 : 1),
-                  duration: duration,
-                  curve: Curves.easeOutBack,
-                  builder: (context, scale, child) {
-                    return Transform.scale(scale: scale, child: child);
-                  },
-                  child: Icon(
-                    selected ? destination.selectedIcon : destination.icon,
-                    size: AppSizes.iconMd + 2,
-                    color: selected
-                        ? scheme.primary
-                        : scheme.onSurfaceVariant,
-                  ),
+                Icon(
+                  selected ? destination.selectedIcon : destination.icon,
+                  size: AppSizes.iconMd + (selected ? 2 : 0),
+                  color: selected ? Colors.white : scheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 3),
                 AnimatedDefaultTextStyle(
                   duration: duration,
-                  style:
-                      (texts.labelSmall ?? const TextStyle()).copyWith(
-                        fontSize: 10,
-                        color: selected
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        height: 1.15,
-                      ),
+                  style: (texts.labelSmall ?? const TextStyle()).copyWith(
+                    fontSize: 10,
+                    height: 1.1,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                    color: selected ? Colors.white : scheme.onSurfaceVariant,
+                    letterSpacing: 0.2,
+                  ),
                   child: Text(
                     destination.label,
                     maxLines: 1,

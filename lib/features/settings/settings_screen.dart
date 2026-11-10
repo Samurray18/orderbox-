@@ -15,6 +15,7 @@ import '../../core/widgets/soft_card.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import 'shipping/shipping_options_screen.dart';
+import 'store_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -403,6 +404,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
+                     Divider(color: scheme.outlineVariant, height: 1),
+                     _SettingsTile(
+                       icon: Icons.store_rounded,
+                       color: scheme.primary,
+                       title: l10n.isArabic ? 'Store settings' : 'Store settings',
+                       body: l10n.isArabic
+                           ? 'Nom, catégorie, devise, TikTok Pixel, Chargily'
+                           : 'Nom, catégorie, devise, TikTok Pixel, Chargily',
+                       onTap: () => Navigator.of(context).push(
+                         MaterialPageRoute(
+                           builder: (_) => const StoreSettingsScreen(),
+                         ),
+                       ),
+                     ),
                     if (FenneclySupabase.isLoggedIn) ...[
                       Divider(color: scheme.outlineVariant, height: 1),
                       _SettingsTile(

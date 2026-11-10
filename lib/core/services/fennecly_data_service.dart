@@ -931,6 +931,79 @@ class FenneclyDataService {
   }
 
   // ---------------------------------------------------------------------
+  // Store settings parity (web dashboard.store-settings page).
+  // stores: name/category/description/currency/tiktok_pixel_id ·
+  // store_settings: chargily_enabled (Payments tab).
+  // ---------------------------------------------------------------------
+
+  static Future<Map<String, dynamic>?> getStoreSettings(String storeId) async {
+    if (storeId.isEmpty) return null;
+    try {
+      final res = await _db
+          .from('stores')
+          .select('id, name, slug, category, description, currency, logo_url, tiktok_pixel_id')
+          .eq('id', storeId)
+          .maybeSingle();
+      if (res == null) return null;
+      return Map<String, dynamic>.from(res as Map);
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<bool> updateStoreSettings({
+    required String storeId,
+    String? name,
+    String? category,
+    String? description,
+    String? currency,
+    String? tiktokPixelId,
+  }) async {
+    if (storeId.isEmpty) return false;
+    try {
+      final values = <String, dynamic>{};
+      if (name != null) values['name'] = name;
+      if (category != null) values['category'] = category;
+      if (description != null) values['description'] = description;
+      if (currency != null) values['currency'] = currency;
+      if (tiktokPixelId != null) values['tiktok_pixel_id'] = tiktokPixelId;
+      if (values.isEmpty) return true;
+      await _db.from('stores').update(values).eq('id', storeId);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool?> getChargilyEnabled() async {
+    final user = _db.auth.currentUser;
+    if (user == null) return null;
+    try {
+      final res = await _db
+          .from('store_settings')
+          .select('chargily_enabled')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      if (res == null) return null;
+      return (res as Map)['chargily_enabled'] == true;
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<bool> updateChargilyEnabled(bool enabled) async {
+    final user = _db.auth.currentUser;
+    if (user == null) return false;
+    try {
+      await _db
+          .from('store_settings')
+          .update(<String, dynamic>{'chargily_enabled': enabled})
+          .eq('user_id', user.id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // COD manager — cod_collections / cod_transfers (owner scoped).
   // ---------------------------------------------------------------------
 

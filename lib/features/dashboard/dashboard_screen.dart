@@ -22,7 +22,9 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeletons.dart';
 import '../../core/widgets/soft_card.dart';
 import '../../core/utils/context_ext.dart';
+import '../analytics/analytics_screen.dart';
 import '../cod/cod_manager_screen.dart';
+import '../delivery_map/delivery_map_screen.dart';
 import '../orders/order_details_screen.dart';
 import '../profit/profit_screen.dart';
 import '../returns/returns_screen.dart';
@@ -469,6 +471,12 @@ class _QuickActionsRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final sections = <({String label, IconData icon, Color color, Widget Function() build})>[
       (
+        label: ar ? 'التحليلات' : 'Analytique',
+        icon: Icons.query_stats_rounded,
+        color: AppColors.blue,
+        build: () => const AnalyticsScreen(),
+      ),
+      (
         label: ar ? 'المرتجعات' : 'Retours',
         icon: Icons.assignment_return_rounded,
         color: scheme.tertiary,
@@ -482,9 +490,15 @@ class _QuickActionsRow extends StatelessWidget {
       ),
       (
         label: ar ? 'المصاريف' : 'Profit',
-        icon: Icons.query_stats_rounded,
+        icon: Icons.savings_rounded,
         color: AppColors.amber,
         build: () => const ProfitScreen(),
+      ),
+      (
+        label: ar ? 'الخريطة' : 'Carte',
+        icon: Icons.map_rounded,
+        color: AppColors.green,
+        build: () => const DeliveryMapScreen(),
       ),
     ];
     void open(int index) {

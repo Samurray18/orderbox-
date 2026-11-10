@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/order.dart';
@@ -282,6 +282,8 @@ class AppLocalizations {
   String get last7Days => _t('7 derniers jours', 'Ø¢Ø®Ø± 7 Ø£ÙŠØ§Ù…');
   String get last30Days => _t('30 derniers jours', 'Ø¢Ø®Ø± 30 ÙŠÙˆÙ…Ø§Ù‹');
   String get allTime => _t('Tout', 'Ø§Ù„ÙƒÙ„');
+  String get analyticsTitle => _t('Analytics', 'التحليلات');
+  String get analyticsSubtitle => _t('Vue rapide de vos performances', 'أداؤك بلمحة');
   String get revenueChartTitle => _t('Revenus', 'Ø§Ù„Ø¥ÙŠØ±Ø§Ø¯Ø§Øª');
   String get revenueChartSubtitle =>
       _t('Commandes livrÃ©es par jour', 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³Ù„Ù‘Ù…Ø© ÙŠÙˆÙ…ÙŠØ§Ù‹');

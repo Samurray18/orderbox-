@@ -70,9 +70,11 @@ class CustomersScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final texts = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final ar = isArabicContext(context);
     final customers = _build(store.orders);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -84,29 +86,37 @@ class CustomersScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${l10n.greetingForHour(DateTime.now().hour)}, ${store.storeNameOr(l10n.storeDefault)}',
-                      style: texts.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 2),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(l10n.customersTitle,
-                              style: texts.headlineLarge?.copyWith(fontSize: 28)),
-                        ),
                         Container(
-                          padding: const EdgeInsetsDirectional.symmetric(
-                              horizontal: 10, vertical: 6),
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(999),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.lavenderPillDark
+                                : AppColors.lavenderPill,
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          child: Text(
-                            formatNumber(context, customers.length),
-                            style: texts.labelLarge?.copyWith(
-                                color: scheme.primary, fontWeight: FontWeight.w700),
+                          child: const Icon(
+                            Icons.people_alt_rounded,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.customersTitle,
+                                  style: texts.headlineLarge?.copyWith(fontSize: 28)),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${formatNumber(context, customers.length)} · ${ar ? 'عميل' : 'clients'}',
+                                style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
                           ),
                         ),
                       ],

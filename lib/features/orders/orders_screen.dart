@@ -142,8 +142,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final pendingCount = store.awaitingConfirmationOf(orders);
     final deliveredCount = store.deliveredCountOf(orders);
 
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
     return Scaffold(
-      body: RefreshIndicator(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          RefreshIndicator(
         onRefresh: _refresh,
         edgeOffset: 0,
         child: CustomScrollView(
@@ -165,49 +170,59 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.lavenderPillDark
+                                  : AppColors.lavenderPill,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag_rounded,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${l10n.greetingForHour(DateTime.now().hour)}, '
-                                  '${store.storeNameOr(l10n.storeDefault)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
                                   l10n.ordersTitle,
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineLarge
-                                      ?.copyWith(fontSize: 28),
+                                      ?.copyWith(fontSize: 28, height: 1.1),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.ordersCount(formatNumber(context, orders.length)),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+                          IconButton(
+                            tooltip: l10n.searchOrdersHint,
+                            onPressed: () {
+                              AppHaptics.select();
+                              FocusScope.of(context).requestFocus(_searchFocus);
+                            },
+                            icon: const Icon(Icons.search_rounded),
+                          ),
                           InitialsAvatar(
                             name: store.storeNameOr(l10n.storeDefault),
-                            size: 46,
+                            size: 44,
                             onTap: widget.onOpenSettings,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        l10n.ordersCount(
-                          formatNumber(context, orders.length),
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       SoftCard(
@@ -458,7 +473,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 ),
               ),
           ],
-        ),
+          ),
+          ),
+          PositionedDirectional(
+            end: AppSpacing.lg,
+            bottom: bottomPadding + AppSizes.navHeight + 36,
+            child: FloatingActionButton(
+              onPressed: () {
+                AppHaptics.select();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const OrderFormScreen(),
+                  ),
+                );
+              },
+              tooltip: l10n.addOrder,
+              child: const Icon(Icons.add_rounded),
+            ),
+          ),
+        ],
       ),
     );
   }

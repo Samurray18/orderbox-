@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../utils/haptics.dart';
 
@@ -80,8 +81,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final texts = Theme.of(context).textTheme;
-    final duration = const Duration(milliseconds: 280);
+    const duration = Duration(milliseconds: 280);
 
     return Semantics(
       selected: selected,
@@ -90,19 +92,21 @@ class _NavItem extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           onTap: onTap,
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOutCubic,
-            margin: const EdgeInsetsDirectional.symmetric(
-              horizontal: 2,
+            margin: const EdgeInsetsDirectional.symmetric(horizontal: 3),
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: selected ? 10 : 2,
+              vertical: 2,
             ),
             decoration: BoxDecoration(
               color: selected
-                  ? scheme.primary.withValues(alpha: 0.11)
+                  ? (dark ? AppColors.lavenderPillDark : AppColors.lavenderPill)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

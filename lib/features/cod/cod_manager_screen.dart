@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/services/fennecly_data_service.dart';
+import '../../core/widgets/app_backdrop.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
@@ -114,7 +115,7 @@ class _CodManagerScreenState extends State<CodManagerScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           leading: const AppBackButton(),
           title: Text(ar ? 'إدارة الدفع عند الاستلام' : 'Gestion COD'),
@@ -128,7 +129,8 @@ class _CodManagerScreenState extends State<CodManagerScreen> {
             ],
           ),
         ),
-        body: _loading
+        body: AppBackdrop(
+          child: _loading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: _load,
@@ -150,6 +152,7 @@ class _CodManagerScreenState extends State<CodManagerScreen> {
                   ],
                 ),
               ),
+        ),
       ),
     );
   }

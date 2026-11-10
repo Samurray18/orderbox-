@@ -7,11 +7,10 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/services/fennecly_data_service.dart';
 import '../../core/services/fennecly_supabase.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/app_bottom_nav.dart';
-import '../../core/widgets/expanding_fab.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
-import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/products/products_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -27,6 +26,10 @@ class _HomeShellState extends State<HomeShell> {
   final PageController _pageController = PageController();
   int _index = 0;
   bool _autoSynced = false;
+
+  // Tab order (reference spec): Tableau · Commandes · Produits · Clients · Réglages
+  static const ordersIndex = 1;
+  static const settingsIndex = 4;
 
   @override
   void initState() {
@@ -60,36 +63,15 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  Future<void> _openNewOrder() async {
-    await Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 420),
-        pageBuilder: (_, __, ___) => const OrderFormScreen(),
-        transitionsBuilder: (_, animation, __, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          );
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.06),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
-    if (mounted) _select(0);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final destinations = [
+      NavDestination(
+        icon: Icons.dashboard_outlined,
+        selectedIcon: Icons.dashboard_rounded,
+        label: l10n.navDashboard,
+      ),
       NavDestination(
         icon: Icons.receipt_long_outlined,
         selectedIcon: Icons.receipt_long_rounded,
@@ -106,11 +88,6 @@ class _HomeShellState extends State<HomeShell> {
         label: l10n.navCustomers,
       ),
       NavDestination(
-        icon: Icons.dashboard_outlined,
-        selectedIcon: Icons.dashboard_rounded,
-        label: l10n.navDashboard,
-      ),
-      NavDestination(
         icon: Icons.tune_rounded,
         selectedIcon: Icons.tune_rounded,
         label: l10n.navSettings,
@@ -118,44 +95,34 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    const settingsIndex = 4;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              OrdersScreen(onOpenSettings: () => _select(settingsIndex)),
-              ProductsScreen(onViewOrders: () => _select(0)),
-              const CustomersScreen(),
-              DashboardScreen(onViewOrders: () => _select(0)),
-              const SettingsScreen(),
-            ],
-          ),
-          PositionedDirectional(
-            start: AppSpacing.md,
-            end: AppSpacing.md,
-            bottom: bottomPadding + 10,
-            child: AppBottomNav(
-              currentIndex: _index,
-              onSelected: _select,
-              destinations: destinations,
+      body: AppBackdrop(
+        child: Stack(
+          children: [
+            PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                DashboardScreen(onViewOrders: () => _select(ordersIndex)),
+                OrdersScreen(onOpenSettings: () => _select(settingsIndex)),
+                ProductsScreen(onViewOrders: () => _select(ordersIndex)),
+                const CustomersScreen(),
+                const SettingsScreen(),
+              ],
             ),
-          ),
-          PositionedDirectional(
-            end: AppSpacing.md,
-            bottom: bottomPadding +
-                AppSizes.navHeight +
-                AppSpacing.md +
-                AppSpacing.sm,
-            child: ExpandingFab(
-              label: l10n.addOrder,
-              onPressed: _openNewOrder,
+            PositionedDirectional(
+              start: AppSpacing.md,
+              end: AppSpacing.md,
+              bottom: bottomPadding + 10,
+              child: AppBottomNav(
+                currentIndex: _index,
+                onSelected: _select,
+                destinations: destinations,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

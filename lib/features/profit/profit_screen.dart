@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_back_button.dart';
+import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/section_header.dart';
@@ -230,7 +231,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
     final margin = revenue > 0 ? netProfit / revenue * 100 : 0.0;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Text(ar ? 'الأرباح' : 'Profit & dépenses'),
@@ -240,7 +241,8 @@ class _ProfitScreenState extends State<ProfitScreen> {
         icon: const Icon(Icons.add_rounded),
         label: Text(ar ? 'مصروف' : 'Dépense'),
       ),
-      body: ListView(
+      body: AppBackdrop(
+        child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsetsDirectional.fromSTEB(
           AppSpacing.lg,
@@ -334,6 +336,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
               const SizedBox(height: AppSpacing.sm),
             ],
         ],
+        ),
       ),
     );
   }

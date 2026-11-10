@@ -8,11 +8,12 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_back_button.dart';
+import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Returns & refunds — parity with the web dashboard.returns route.
+/// Returns & refunds Ã¢â‚¬â€ parity with the web dashboard.returns route.
 /// Statuses: requested | approved | rejected | received | refunded.
 class ReturnsScreen extends StatefulWidget {
   const ReturnsScreen({super.key});
@@ -77,15 +78,15 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     final ar = isArabicContext(context);
     switch (status) {
       case 'approved':
-        return ar ? 'موافق عليها' : 'Approuvé';
+        return ar ? 'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡Ã˜Â§' : 'ApprouvÃƒÂ©';
       case 'rejected':
-        return ar ? 'مرفوضة' : 'Rejeté';
+        return ar ? 'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶Ã˜Â©' : 'RejetÃƒÂ©';
       case 'received':
-        return ar ? 'تم استلامها' : 'Reçue';
+        return ar ? 'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â³Ã˜ÂªÃ™â€žÃ˜Â§Ã™â€¦Ã™â€¡Ã˜Â§' : 'ReÃƒÂ§ue';
       case 'refunded':
-        return ar ? 'تمّت التحويلة' : 'Remboursé';
+        return ar ? 'Ã˜ÂªÃ™â€¦Ã™â€˜Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€žÃ˜Â©' : 'RemboursÃƒÂ©';
       default:
-        return ar ? 'طلب جديد' : 'Demandé';
+        return ar ? 'Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯' : 'DemandÃƒÂ©';
     }
   }
 
@@ -111,7 +112,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     AppHaptics.select();
     showAppSnackBar(
       context,
-      ok ? '✓ ${_statusLabel(status)}' : 'Échec de la mise à jour',
+      ok ? 'Ã¢Å“â€œ ${_statusLabel(status)}' : 'Ãƒâ€°chec de la mise ÃƒÂ  jour',
       icon: ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
       iconColor: ok ? null : Theme.of(context).colorScheme.error,
     );
@@ -166,7 +167,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     if (eligible.isEmpty) {
       showAppSnackBar(
         context,
-        'Aucune commande synchronisée n’est éligible',
+        'Aucune commande synchronisÃƒÂ©e nÃ¢â‚¬â„¢est ÃƒÂ©ligible',
         icon: Icons.info_outline_rounded,
       );
       return;
@@ -219,7 +220,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                           DropdownMenuItem(
                             value: o,
                             child: Text(
-                              '#${_shortId(o.id)} — ${o.customerName}',
+                              '#${_shortId(o.id)} Ã¢â‚¬â€ ${o.customerName}',
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -262,7 +263,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                       controller: detailsController,
                       maxLines: 3,
                       decoration: const InputDecoration(
-                        labelText: 'Détails (optionnel)',
+                        labelText: 'DÃƒÂ©tails (optionnel)',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -295,12 +296,12 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     setState(() => _busy = false);
     AppHaptics.select();
     if (ok) {
-      showAppSnackBar(context, 'Demande de retour créée ✓');
+      showAppSnackBar(context, 'Demande de retour crÃƒÂ©ÃƒÂ©e Ã¢Å“â€œ');
       await _load();
     } else {
       showAppSnackBar(
         context,
-        'Échec de la création',
+        'Ãƒâ€°chec de la crÃƒÂ©ation',
         icon: Icons.error_outline_rounded,
         iconColor: Theme.of(context).colorScheme.error,
       );
@@ -311,19 +312,20 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   Widget build(BuildContext context) {
     final ar = isArabicContext(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: Text(ar ? 'المرتجعات' : 'Retours & remboursements'),
+        title: Text(ar ? 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã˜ÂªÃ˜Â¬Ã˜Â¹Ã˜Â§Ã˜Âª' : 'Retours & remboursements'),
       ),
       floatingActionButton: (_loading || _busy)
           ? null
           : FloatingActionButton.extended(
               onPressed: _createReturn,
               icon: const Icon(Icons.add_rounded),
-              label: Text(ar ? 'طلب إرجاع' : 'Nouveau retour'),
+              label: Text(ar ? 'Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â¥Ã˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹' : 'Nouveau retour'),
             ),
-      body: _loading
+      body: AppBackdrop(
+        child: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
@@ -336,7 +338,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                             icon: Icons.assignment_return_rounded,
                             title: 'Aucune demande de retour',
                             body:
-                                'Créez une demande à partir d’une commande synchronisée.',
+                                'CrÃƒÂ©ez une demande ÃƒÂ  partir dÃ¢â‚¬â„¢une commande synchronisÃƒÂ©e.',
                           ),
                         ),
                       ],
@@ -401,7 +403,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                '#${_shortId(orderId)} · ${(row['reason'] ?? '').toString()}',
+                                '#${_shortId(orderId)} Ã‚Â· ${(row['reason'] ?? '').toString()}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -437,14 +439,14 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                                       onPressed: _busy
                                           ? null
                                           : () => _updateStatus(row, 'approved'),
-                                      child: Text(ar ? 'موافقة' : 'Approuver'),
+                                      child: Text(ar ? 'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â©' : 'Approuver'),
                                     ),
                                     OutlinedButton(
                                       onPressed: _busy
                                           ? null
                                           : () => _updateStatus(row, 'rejected'),
                                       child: Text(
-                                        ar ? 'رفض' : 'Rejeter',
+                                        ar ? 'Ã˜Â±Ã™ÂÃ˜Â¶' : 'Rejeter',
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.error,
                                         ),
@@ -457,17 +459,17 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                                           ? null
                                           : () => _updateStatus(row, 'received'),
                                       child:
-                                          Text(ar ? 'تمّ الاستلام' : 'Marquer reçue'),
+                                          Text(ar ? 'Ã˜ÂªÃ™â€¦Ã™â€˜ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ™â€žÃ˜Â§Ã™â€¦' : 'Marquer reÃƒÂ§ue'),
                                     ),
                                   if (status == 'received')
                                     FilledButton(
                                       onPressed:
                                           _busy ? null : () => _refund(row),
-                                      child: Text(ar ? 'استرجاع المبلغ' : 'Rembourser'),
+                                      child: Text(ar ? 'Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº' : 'Rembourser'),
                                     ),
                                   if (status == 'refunded' && amount > 0)
                                     Text(
-                                      '${ar ? 'المبلغ:' : 'Refund:'} ${formatCurrency(context, amount)}',
+                                      '${ar ? 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº:' : 'Refund:'} ${formatCurrency(context, amount)}',
                                     ),
                                 ],
                               ),
@@ -477,6 +479,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                       },
                     ),
             ),
+        ),
     );
   }
 }

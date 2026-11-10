@@ -187,6 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final storeName = store.storeNameOr(l10n.storeDefault);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -202,16 +203,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.settingsTitle,
-                      style: texts.headlineLarge?.copyWith(fontSize: 28),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.settingsSubtitle,
-                      style: texts.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.lavenderPillDark
+                                : AppColors.lavenderPill,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.tune_rounded,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.settingsTitle,
+                                style: texts.headlineLarge?.copyWith(fontSize: 28),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.settingsSubtitle,
+                                style: texts.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

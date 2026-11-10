@@ -26,6 +26,7 @@ import '../cod/cod_manager_screen.dart';
 import '../orders/order_details_screen.dart';
 import '../profit/profit_screen.dart';
 import '../returns/returns_screen.dart';
+import '../revenue/revenue_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, this.onViewOrders});
@@ -74,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
     final l10n = AppLocalizations.of(context);
+    final ar = isArabicContext(context);
     final orders = store.ordersInPeriod(_period);
     final revenue = store.revenueOf(orders);
     final profit = store.profitOf(orders);
@@ -84,11 +86,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final returnedCount = store.returnedCountOf(orders);
     final growth = store.growthPercent(_period);
     final series = store.dailyRevenue(7);
+    final now = DateTime.now();
     final maxRevenue = series.fold<double>(0, (m, item) => math.max(m, item.value));
     final recent = store.recent(limit: 3);
     final allOrders = store.orders;
+    final dailyProfit = List<double>.generate(7, (i) {
+      final day = DateTime(now.year, now.month, now.day - 6 + i);
+      return allOrders
+          .where(
+            (o) =>
+                o.status == OrderStatus.delivered &&
+                o.createdAt.year == day.year &&
+                o.createdAt.month == day.month &&
+                o.createdAt.day == day.day,
+          )
+          .fold<double>(0, (sum, o) => sum + o.profit);
+    });
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
@@ -115,7 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               children: [
                                 Text(
                                   '${l10n.greetingForHour(DateTime.now().hour)}, '
-                                  '${store.storeNameOr(l10n.storeDefault)}',
+                                  '${store.storeNameOr(l10n.storeDefault)} 👋',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
@@ -137,20 +153,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsetsDirectional.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(AppRadius.pill),
-                            ),
-                            child: Text(
-                              formatDateMedium(context, DateTime.now()),
-                              style: Theme.of(context).textTheme.labelSmall,
+                          PopupMenuButton<DashboardPeriod>(
+                            tooltip: isArabicContext(context) ? 'الفترة' : 'Période',
+                            onSelected: (value) {
+                              AppHaptics.select();
+                              setState(() => _period = value);
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem<DashboardPeriod>(
+                                value: DashboardPeriod.days7,
+                                child: Text('7 derniers jours'),
+                              ),
+                              const PopupMenuItem<DashboardPeriod>(
+                                value: DashboardPeriod.days30,
+                                child: Text('30 derniers jours'),
+                              ),
+                              const PopupMenuItem<DashboardPeriod>(
+                                value: DashboardPeriod.all,
+                                child: Text('Tout'),
+                              ),
+                            ],
+                            child: Container(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                AppSpacing.sm,
+                                AppSpacing.xs,
+                                AppSpacing.xs,
+                                AppSpacing.xs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: AppSizes.iconXs,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    formatDateMedium(context, DateTime.now()),
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xxs),
+                                  Icon(
+                                    Icons.expand_more_rounded,
+                                    size: AppSizes.iconSm,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -225,6 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       final profitCard = _ProfitCard(
                         profit: profit,
                         margin: margin,
+                        spark: dailyProfit,
                       );
                       final returnCard = _ReturnRateCard(
                         returnRate: returnRate,
@@ -277,7 +343,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         SectionHeader(
                           title: l10n.revenueChartTitle,
-                          subtitle: l10n.last7Days,
+                          subtitle: ar ? 'آخر ٧ أيام' : '7 derniers jours',
+                          actionLabel: ar ? 'عرض الكل' : 'Voir plus',
+                          actionIcon: Icons.arrow_forward_rounded,
+                          onAction: () {
+                            AppHaptics.select();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const RevenueScreen(),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: AppSpacing.md),
                         SizedBox(
@@ -563,13 +639,23 @@ class _RevenueHero extends StatelessWidget {
     final showGrowth = period != DashboardPeriod.all;
 
     return SoftCard(
-      gradient: AppColors.primaryGradient,
+      gradient: AppColors.revenueGradient,
       border: false,
-      shadow: false,
       padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          // Faint decorative bar chart (spec: revenue card backdrop)
+          PositionedDirectional(
+            bottom: -12,
+            end: -6,
+            child: IgnorePointer(
+              child: CustomPaint(
+                size: const Size(120, 84),
+                painter: _FaintBarsPainter(),
+              ),
+            ),
+          ),
           PositionedDirectional(
             top: -30,
             end: -20,
@@ -698,10 +784,15 @@ class _RevenueHero extends StatelessWidget {
 }
 
 class _ProfitCard extends StatelessWidget {
-  const _ProfitCard({required this.profit, required this.margin});
+  const _ProfitCard({
+    required this.profit,
+    required this.margin,
+    required this.spark,
+  });
 
   final double profit;
   final double margin;
+  final List<double> spark;
 
   @override
   Widget build(BuildContext context) {
@@ -782,6 +873,53 @@ class _ProfitCard extends StatelessWidget {
                   color: AppColors.lightSurface.withValues(alpha: 0.72),
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 44,
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+                    maxY: spark.fold<double>(0, (m, v) => math.max(m, v)) + 1,
+                    gridData: const FlGridData(show: false),
+                    titlesData: const FlTitlesData(show: false),
+                    borderData: FlBorderData(show: false),
+                    lineTouchData: const LineTouchData(enabled: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: [
+                          for (var i = 0; i < spark.length; i++)
+                            FlSpot(i.toDouble(), spark[i].clamp(0, double.infinity)),
+                        ],
+                        isCurved: true,
+                        curveSmoothness: 0.4,
+                        color: AppColors.lightSurface,
+                        barWidth: 1.8,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, barData, index) =>
+                              FlDotCirclePainter(
+                            radius: 2.4,
+                            color: AppColors.lightSurface,
+                            strokeWidth: 1.6,
+                            strokeColor: AppColors.mintDeep,
+                          ),
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.3),
+                              Colors.white.withValues(alpha: 0),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -845,21 +983,42 @@ class _ReturnRateCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$returnedCount / ${deliveredCount + returnedCount}',
+                  '$returnedCount / ${deliveredCount + returnedCount} ${l10n.returnRateSub}',
                   style: texts.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l10n.returnRateSub,
-                  style: texts.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 10,
                   ),
                   maxLines: 2,
                 ),
               ],
+            ),
+          ),
+          Tooltip(
+            message: isArabicContext(context) ? 'المرتجعات' : 'Retours',
+            child: Material(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.lavenderPillDark
+                  : AppColors.lavenderPill,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  AppHaptics.select();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ReturnsScreen(),
+                    ),
+                  );
+                },
+                child: const SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: AppSizes.iconSm,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -905,7 +1064,7 @@ class _RingPainter extends CustomPainter {
   }
 }
 
-class _RevenueBarChart extends StatelessWidget {
+class _RevenueBarChart extends StatefulWidget {
   const _RevenueBarChart({
     required this.series,
     required this.maxRevenue,
@@ -915,9 +1074,17 @@ class _RevenueBarChart extends StatelessWidget {
   final double maxRevenue;
 
   @override
+  State<_RevenueBarChart> createState() => _RevenueBarChartState();
+}
+
+class _RevenueBarChartState extends State<_RevenueBarChart> {
+  late int _selected = widget.series.isEmpty ? 0 : widget.series.length - 1;
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
+    final series = widget.series;
+    final maxRevenue = widget.maxRevenue;
     final maxY = maxRevenue <= 0 ? 1.0 : maxRevenue * 1.25;
     final step = maxY / 4;
 
@@ -977,14 +1144,17 @@ class _RevenueBarChart extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 final day = series[index].day;
+                final selected = index == _selected;
                 return Padding(
                   padding: const EdgeInsetsDirectional.only(top: 6),
                   child: Text(
                     _dateFormatDay(context, day),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
                       fontSize: 9,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                     ),
                   ),
                 );
@@ -994,29 +1164,38 @@ class _RevenueBarChart extends StatelessWidget {
         ),
         barTouchData: BarTouchData(
           enabled: true,
+          handleBuiltInTouches: true,
+          touchCallback: (event, response) {
+            final idx = response?.spot?.touchedBarGroupIndex;
+            if (idx != null && idx != _selected) {
+              AppHaptics.select();
+              setState(() => _selected = idx);
+            }
+          },
           touchTooltipData: BarTouchTooltipData(
             tooltipPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.xs,
             ),
-            tooltipMargin: 8,
-            getTooltipColor: (_) =>
-                Theme.of(context).colorScheme.inverseSurface,
+            tooltipMargin: 12,
+            getTooltipColor: (_) => scheme.inverseSurface,
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final value = series[group.x].value;
               final day = series[group.x].day;
               return BarTooltipItem(
                 '${formatDateShort(context, day)}\n',
                 Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: Theme.of(context).colorScheme.onInverseSurface,
+                  color: scheme.onInverseSurface,
                   fontWeight: FontWeight.w600,
                 ),
                 children: [
                   TextSpan(
                     text: formatCurrency(context, value),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onInverseSurface,
-                      fontWeight: FontWeight.w700,
+                      color: scheme.onInverseSurface,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
@@ -1026,28 +1205,19 @@ class _RevenueBarChart extends StatelessWidget {
         ),
         barGroups: List.generate(series.length, (index) {
           final item = series[index];
-          final isMax = item.value == maxRevenue && maxRevenue > 0;
+          final selected = index == _selected;
           return BarChartGroupData(
             x: index,
+            showingTooltipIndicators: selected ? const [0] : const [],
             barRods: [
               BarChartRodData(
                 toY: item.value <= 0 ? 0.01 : item.value,
-                width: context.isCompact ? 12 : 16,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-                gradient: LinearGradient(
-                  colors: isMax
-                      ? [AppColors.mint, AppColors.mintDeep]
-                      : [AppColors.primaryBright, AppColors.primary],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                ),
-                backDrawRodData: BackgroundBarChartRodData(
-                  show: true,
-                  toY: maxY,
-                  color: scheme.surfaceContainerHigh.withValues(alpha: 0.45),
-                ),
+                width: context.isCompact ? 14 : 18,
+                borderRadius: BorderRadius.circular(999),
+                gradient: selected
+                    ? AppColors.revenueGradient
+                    : null,
+                color: selected ? null : scheme.primary.withValues(alpha: 0.22),
               ),
             ],
           );
@@ -1059,6 +1229,35 @@ class _RevenueBarChart extends StatelessWidget {
 
 String _dateFormatDay(BuildContext context, DateTime day) {
   return DateFormat('EEE', intlLocaleOf(context)).format(day);
+}
+
+/// Faint decorative rounded bars drawn behind the revenue hero content.
+class _FaintBarsPainter extends CustomPainter {
+  const _FaintBarsPainter();
+
+  static const _bars = <double>[0.45, 0.72, 0.38, 0.9, 0.6, 0.82, 1.0, 0.66, 0.5];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.17)
+      ..style = PaintingStyle.fill;
+    final slot = size.width / _bars.length;
+    for (var i = 0; i < _bars.length; i++) {
+      final h = size.height * _bars[i];
+      final left = i * slot + slot * 0.18;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(left, size.height - h, slot * 0.64, h),
+          const Radius.circular(999),
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FaintBarsPainter oldDelegate) => false;
 }
 
 class _NoSalesState extends StatelessWidget {

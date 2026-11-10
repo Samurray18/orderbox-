@@ -35,13 +35,13 @@ jobs:
         env:
           FENNECLY_SUPABASE_URL: ${{ secrets.FENNECLY_SUPABASE_URL }}
           FENNECLY_SUPABASE_ANON_KEY: ${{ secrets.FENNECLY_SUPABASE_ANON_KEY }}
-        run: >-
+        run: |
           if [ -z "$FENNECLY_SUPABASE_URL" ]; then
-            echo "::warning::FENNECLY_SUPABASE_URL secret NOT set — the app will show the offline banner and login won't work (offline mode works fine).";
+            echo "::warning::FENNECLY_SUPABASE_URL secret NOT set — the app will show the offline banner and login won't work (offline mode works fine)."
           fi
-          flutter build ios --release --no-codesign
-          --dart-define=FENNECLY_SUPABASE_URL=${FENNECLY_SUPABASE_URL}
-          --dart-define=FENNECLY_SUPABASE_ANON_KEY=${FENNECLY_SUPABASE_ANON_KEY}
+          flutter build ios --release --no-codesign \
+            --dart-define=FENNECLY_SUPABASE_URL=${FENNECLY_SUPABASE_URL} \
+            --dart-define=FENNECLY_SUPABASE_ANON_KEY=${FENNECLY_SUPABASE_ANON_KEY}
 
       - name: Package unsigned IPA
         run: |

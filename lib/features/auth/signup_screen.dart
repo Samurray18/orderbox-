@@ -65,6 +65,15 @@ class _SignupScreenState extends State<SignupScreen> {
       _error = null;
     });
     final l10n = AppLocalizations.of(context);
+    if (!FenneclySupabase.isConfigured) {
+      setState(() {
+        _loading = false;
+        _error = l10n.isArabic
+            ? 'خدمة Fennecly غير متاحة في هذا الإصدار — لست بحاجة لحساب للاستخدام كـ"نسخة تجريبية".'
+            : 'Service Fennecly indisponible — vous pouvez utiliser l’app sans compte.';
+      });
+      return;
+    }
     try {
       final res = await FenneclySupabase.client.auth.signUp(
         email: _email.text.trim(),
@@ -100,7 +109,16 @@ class _SignupScreenState extends State<SignupScreen> {
     } on AuthException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = e.toString());
+      final message = e.toString();
+      setState(() {
+        final ar = AppLocalizations.of(context).isArabic;
+        _error = message.contains('Client has not been initialized') ||
+                message.contains('Supabase')
+            ? (ar
+                ? 'خدمة Fennecly غير متاحة في هذا الإصدار.'
+                : 'Service Fennecly indisponible dans cette version.')
+            : message;
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }

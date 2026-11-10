@@ -43,6 +43,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     final l10n = AppLocalizations.of(context);
+    if (!FenneclySupabase.isConfigured) {
+      setState(() {
+        _loading = false;
+        _error = l10n.isArabic
+            ? 'خدمة Fennecly غير متاحة في هذا الإصدار — انقر "متابعة بدون حساب".'
+            : 'Service Fennecly indisponible dans cette version — utilisez « Continuer sans compte ».';
+      });
+      return;
+    }
     try {
       await FenneclySupabase.client.auth.signInWithPassword(
         email: _email.text.trim(),
@@ -65,7 +74,15 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = e.toString());
+      final message = e.toString();
+      setState(() {
+        _error = message.contains('Client has not been initialized') ||
+                message.contains('Supabase')
+            ? (AppLocalizations.of(context).isArabic
+                ? 'خدمة Fennecly غير متاحة — معاينة بدون حساب فقط، أو أعد البناء بمفاتيح Supabase.'
+                : 'Service Fennecly indisponible — utilisez « Continuer sans compte » ou rebuild avec les clés Supabase.')
+            : message;
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -76,6 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
       _loading = true;
       _error = null;
     });
+    final l10n = AppLocalizations.of(context);
+    if (!FenneclySupabase.isConfigured) {
+      setState(() {
+        _loading = false;
+        _error = l10n.isArabic
+            ? 'خدمة Fennecly غير متاحة في هذا الإصدار.'
+            : 'Service Fennecly indisponible dans cette version.';
+      });
+      return;
+    }
     try {
       // Phase 1: optional Google sign-in (Fennecly parity).
       await FenneclySupabase.client.auth.signInWithOAuth(
@@ -84,6 +111,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on AuthException catch (e) {
       setState(() => _error = e.message);
+    } catch (e) {
+      final message = e.toString();
+      setState(() {
+        final ar = l10n.isArabic;
+        _error = message.contains('Client has not been initialized') ||
+                message.contains('Supabase')
+            ? (ar
+                ? 'خدمة Fennecly غير متاحة في هذا الإصدار.'
+                : 'Service Fennecly indisponible dans cette version.')
+            : message;
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -136,6 +174,40 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.sm),
+                          if (!FenneclySupabase.isConfigured)
+                            Container(
+                              padding: const EdgeInsetsDirectional.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: scheme.errorContainer.withValues(alpha: 0.6),
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                border: Border.all(
+                                  color: scheme.error.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: AppSizes.iconSm,
+                                    color: scheme.onErrorContainer,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Expanded(
+                                    child: Text(
+                                      ar
+                                          ? 'خدمة Fennecly غير متاحة في هذا البناء (بدون مفتاح Supabase). استخدم « متابعة بدون حساب ».'
+                                          : 'Service Fennecly indisponible dans cette version (clé manquante). Utilisez « Continuer sans compte ».',
+                                      maxLines: 3,
+                                      style: texts.bodySmall?.copyWith(
+                                        color: scheme.onErrorContainer,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           TextFormField(
                             controller: _email,
                             keyboardType: TextInputType.emailAddress,

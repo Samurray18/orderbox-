@@ -320,12 +320,31 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.customersTitle,
-                                  style: texts.headlineLarge?.copyWith(fontSize: 28)),
-                              const SizedBox(height: 2),
                               Text(
-                                '${formatNumber(context, customers.length)} · ${ar ? 'عميل' : 'clients'}',
-                                style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                                l10n.customersTitle.toUpperCase(),
+                                style: texts.labelSmall?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.6,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '${customers.length}',
+                                      style: texts.displaySmall?.copyWith(
+                                          fontWeight: FontWeight.w800, height: 0.9),
+                                    ),
+                                    TextSpan(
+                                      text: ' ${l10n.customersTitle.toLowerCase()}',
+                                      style: texts.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: scheme.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

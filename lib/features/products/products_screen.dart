@@ -108,25 +108,38 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l10n.productsTitle,
+                                l10n.productsTitle.toUpperCase(),
                                 style: Theme.of(context)
                                     .textTheme
-                                    .headlineLarge
-                                    ?.copyWith(fontSize: 28),
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.6,
+                                    ),
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                l10n.productsCount(
-                                  formatNumber(context, products.length),
-                                ),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '${products.length}',
+                                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            height: 0.9,
+                                          ),
                                     ),
+                                    TextSpan(
+                                      text: ' ${l10n.productsTitle.toLowerCase()}',
+                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

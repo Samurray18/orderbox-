@@ -170,96 +170,86 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 46,
-                            height: 46,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? AppColors.lavenderPillDark
-                                  : AppColors.lavenderPill,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.shopping_bag_rounded,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l10n.ordersTitle,
+                                  l10n.ordersTitle.toUpperCase(),
                                   style: Theme.of(context)
                                       .textTheme
-                                      .headlineLarge
-                                      ?.copyWith(fontSize: 28, height: 1.1),
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1.6,
+                                      ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
-                                  l10n.ordersCount(formatNumber(context, orders.length)),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: '${orders.length}',
+                                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              height: 0.9,
+                                            ),
+                                      ),
+                                      TextSpan(
+                                        text: ' ${l10n.ordersWord}',
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          IconButton(
-                            tooltip: l10n.searchOrdersHint,
-                            onPressed: () {
-                              AppHaptics.select();
-                              FocusScope.of(context).requestFocus(_searchFocus);
-                            },
-                            icon: const Icon(Icons.search_rounded),
-                          ),
-                          InitialsAvatar(
-                            name: store.storeNameOr(l10n.storeDefault),
-                            size: 44,
+                          GestureDetector(
                             onTap: widget.onOpenSettings,
+                            child: InitialsAvatar(
+                              name: store.storeNameOr(l10n.storeDefault),
+                              size: 46,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      SoftCard(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _MiniStat(
-                                icon: Icons.today_rounded,
-                                color: Theme.of(context).colorScheme.primary,
-                                label: l10n.summaryToday,
-                                value: formatNumber(context, todayCount),
-                              ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatMiniCard(
+                              icon: Icons.today_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              label: l10n.summaryToday,
+                              value: formatNumber(context, todayCount),
                             ),
-                            _StatDivider(),
-                            Expanded(
-                              child: _MiniStat(
-                                icon: Icons.notifications_active_rounded,
-                                color: AppColors.amber,
-                                label: l10n.summaryToConfirm,
-                                value: formatNumber(context, pendingCount),
-                              ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _StatMiniCard(
+                              icon: Icons.notifications_active_rounded,
+                              color: AppColors.amber,
+                              label: l10n.summaryToConfirm,
+                              value: formatNumber(context, pendingCount),
                             ),
-                            _StatDivider(),
-                            Expanded(
-                              child: _MiniStat(
-                                icon: Icons.check_circle_rounded,
-                                color: AppColors.green,
-                                label: l10n.summaryDelivered,
-                                value: formatNumber(context, deliveredCount),
-                              ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _StatMiniCard(
+                              icon: Icons.task_alt_rounded,
+                              color: AppColors.mintDeep,
+                              label: l10n.summaryDelivered,
+                              value: formatNumber(context, deliveredCount),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.md),
                       TextField(
@@ -497,8 +487,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({
+class _StatMiniCard extends StatelessWidget {
+  const _StatMiniCard({
     required this.icon,
     required this.color,
     required this.label,
@@ -512,53 +502,45 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final texts = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxs,
-      ),
+    final scheme = Theme.of(context).colorScheme;
+    return SoftCard(
+      radius: 18,
+      padding: const EdgeInsetsDirectional.all(AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: AppSizes.iconSm, color: color),
-              const SizedBox(width: AppSpacing.xxs),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: texts.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: AppSizes.iconSm),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  height: 1,
                 ),
-              ),
-            ],
           ),
           const SizedBox(height: 2),
           Text(
-            value,
-            style: texts.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
+            label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 34,
-      color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }

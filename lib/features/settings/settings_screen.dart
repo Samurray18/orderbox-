@@ -228,8 +228,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l10n.settingsTitle,
-                                style: texts.headlineLarge?.copyWith(fontSize: 28),
+                                l10n.settingsTitle.toUpperCase(),
+                                style: texts.labelSmall?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.6,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.storeName,
+                                style: texts.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  height: 0.95,
+                                ),
                               ),
                               const SizedBox(height: 2),
                               Text(

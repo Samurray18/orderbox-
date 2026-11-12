@@ -9,6 +9,7 @@ import '../../data/db/app_database.dart' as db;
 import '../../domain/models/algeria_geo.dart';
 import '../models/order.dart';
 import '../models/product.dart';
+import '../models/fennecly_notification.dart';
 import '../services/fennecly_data_service.dart';
 import '../services/fennecly_supabase.dart';
 import 'demo_data.dart';
@@ -108,6 +109,7 @@ class AppStore extends ChangeNotifier {
   List<Order> _orders = [];
   List<Product> _products = [];
   List<Expense> _expenses = [];
+  final List<FenneclyNotification> _notifications = [];
   ThemeMode _themeMode = ThemeMode.system;
   Locale _locale = const Locale('en');
   bool _onboardingDone = false;
@@ -672,6 +674,61 @@ class AppStore extends ChangeNotifier {
       _kExpenses,
       jsonEncode(_expenses.map((e) => e.toJson()).toList()),
     );
+  }
+
+  // -------------------------------------------------------------------
+  // Fennecly notifications — cached in-memory list loaded from the
+  // shared notifications table; realtime updates via Supabase channel.
+  // -------------------------------------------------------------------
+
+  List<FenneclyNotification> get notifications =>
+      List.unmodifiable(_notifications);
+
+  int get unreadNotificationsCount =>
+      _notifications.where((n) => !n.read).length;
+
+  void setNotifications(List<FenneclyNotification> list) {
+    _notifications
+      ..clear()
+      ..addAll(list);
+    notifyListeners();
+  }
+
+  void upsertNotification(Map<String, dynamic> row) {
+    final notification = FenneclyNotification.fromMap(row);
+    final index = _notifications.indexWhere((n) => n.id == notification.id);
+    if (index == -1) {
+      _notifications.insert(0, notification);
+    } else {
+      _notifications[index] = notification;
+    }
+    notifyListeners();
+  }
+
+  void markNotificationReadLocal(String id, {bool read = true}) {
+    final index = _notifications.indexWhere((n) => n.id == id);
+    if (index == -1) return;
+    _notifications[index] = _notifications[index].copyWith(read: read);
+    notifyListeners();
+  }
+
+  void markAllNotificationsReadLocal() {
+    for (var i = 0; i < _notifications.length; i++) {
+      if (!_notifications[i].read) {
+        _notifications[i] = _notifications[i].copyWith(read: true);
+      }
+    }
+    notifyListeners();
+  }
+
+  bool deleteNotificationLocal(String id) {
+    final removed = _notifications.length;
+    _notifications.removeWhere((n) => n.id == id);
+    if (_notifications.length != removed) {
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   void addExpense(Expense expense) {

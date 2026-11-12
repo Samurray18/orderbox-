@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/models/algeria_geo.dart';
 import '../data/app_store.dart';
-import '../models/order.dart';
+import '../models/fennecly_notification.dart';
 import '../models/product.dart';
+import '../models/order.dart';
+
 import 'fennecly_supabase.dart';
 
 class FenneclyStoreInfo {
@@ -145,20 +147,146 @@ class FenneclyDataService {
   /// The web stores profile fields there; the mobile app gets them after
   /// login/sync and shows the avatar in-app.
   static Future<Map<String, dynamic>?> fetchProfile() async {
-  final user = _db.auth.currentUser;
-  if (user == null) return null;
-  try {
-    final res = await _db
-        .from('profiles')
-        .select('id,name,email,avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
-    if (res == null) return null;
-    return Map<String, dynamic>.from(res as Map);
-  } catch (_) {
-    return null;
+    final user = _db.auth.currentUser;
+    if (user == null) return null;
+    try {
+      final res = await _db
+          .from('profiles')
+          .select('id,name,email,avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (res == null) return null;
+      return Map<String, dynamic>.from(res as Map);
+    } catch (_) {
+      return null;
+    }
   }
-}
+
+  // -------------------------------------------------------------------
+  // Notifications (shared notifications table — mirrors the web app)
+  // -------------------------------------------------------------------
+
+  static Future<List<FenneclyNotification>> listNotifications({
+    int limit = 50,
+  }) async {
+    final user = _db.auth.currentUser;
+    if (user == null) return const [];
+    try {
+      final res = await _db
+          .from('notifications')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false)
+          .limit(limit);
+      if (res is List) {
+        return res
+            .whereType<Map>()
+            .map((e) => FenneclyNotification.fromMap(
+                Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  static Future<int> unreadNotificationsCount() async {
+    final user = _db.auth.currentUser;
+    if (user == null) return 0;
+    try {
+      final res = await _db
+          .from('notifications')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('read', false)
+          .limit(1000);
+      if (res is List) return res.length;
+    } catch (_) {}
+    return 0;
+  }
+
+  static Future<bool> markNotificationRead(String id, {bool read = true}) async {
+    if (id.isEmpty) return false;
+    try {
+      await _db.from('notifications').update({'read': read}).eq('id', id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> markAllNotificationsRead() async {
+    final user = _db.auth.currentUser;
+    if (user == null) return false;
+    try {
+      await _db
+          .from('notifications')
+          .update({'read': true})
+          .eq('user_id', user.id)
+          .eq('read', false);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteNotification(String id) async {
+    if (id.isEmpty) return false;
+    try {
+      await _db.from('notifications').delete().eq('id', id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Realtime channel on the shared notifications table filtered to the
+  /// signed-in user. Returns null when not authenticated.
+  static RealtimeChannel? notificationsChannel({
+    required void Function(Map<String, dynamic> payload) onInsert,
+  }) {
+    final user = _db.auth.currentUser;
+    if (user == null) return null;
+    return _db
+        .channel('fennecly-notifications-${user.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: user.id,
+          ),
+          callback: (PostgresChangePayload payload) {
+            final eventType = payload.eventType.toString();
+            if ((eventType == 'INSERT' || eventType == 'UPDATE') &&
+                payload.newRecord != null) {
+              onInsert(Map<String, dynamic>.from(payload.newRecord!));
+            }
+          },
+        );
+  }
+
+  static RealtimeChannel? _activeNotificationsChannel;
+
+  static void subscribeNotifications(void Function(Map<String, dynamic>) onEvent) {
+    unsubscribeNotifications();
+    final channel = notificationsChannel(
+      onInsert: (payload) => onEvent(payload),
+    );
+    if (channel == null) return;
+    _activeNotificationsChannel = channel;
+    channel.subscribe();
+  }
+
+  static void unsubscribeNotifications() {
+    final active = _activeNotificationsChannel;
+    if (active == null) return;
+    try {
+      _db.removeChannel(active);
+    } catch (_) {}
+    _activeNotificationsChannel = null;
+  }
 
   /// Full sync: store info, products, orders+items, shipping. Replaces AppStore data.
   static Future<FenneclySyncResult> syncAll(AppStore store) async {
@@ -211,6 +339,12 @@ class FenneclyDataService {
       } catch (e) {
         firstError ??= 'orders: $e';
       }
+
+      // Notifications (mirrors the web's notifications page)
+      try {
+        final notifications = await listNotifications(limit: 30);
+        store.setNotifications(notifications);
+      } catch (_) {}
 
       // Shipping (companies + tariffs) — reuse/extend existing behavior
       try {

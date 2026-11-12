@@ -17,6 +17,7 @@ import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/filter_pill.dart';
 import '../../core/widgets/initials_avatar.dart';
+import '../../core/widgets/notifications_bell.dart';
 import '../../core/widgets/order_card.dart';
 import '../../core/widgets/skeletons.dart';
 import '../../core/widgets/soft_card.dart';
@@ -211,6 +212,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               ],
                             ),
                           ),
+                          const NotificationsBell(compact: true),
+                          const SizedBox(width: AppSpacing.xs),
                           GestureDetector(
                             onTap: widget.onOpenSettings,
                             child: InitialsAvatar(

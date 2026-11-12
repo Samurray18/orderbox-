@@ -485,8 +485,10 @@ store.fenneclyProfileEmail.isNotEmpty
                       onTap: () async {
                         if (FenneclySupabase.isLoggedIn) {
                           await FenneclySupabase.client.auth.signOut();
+                           FenneclyDataService.unsubscribeNotifications();
                           if (!context.mounted) return;
                           context.read<AppStore>().clearFenneclySource();
+                           context.read<AppStore>().setNotifications(const []);
                           setState(() {});
                           showAppSnackBar(context, l10n.isArabic ? 'تم تسجيل الخروج' : 'Déconnecté');
                         } else {

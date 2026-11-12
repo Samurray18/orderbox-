@@ -16,6 +16,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/soft_card.dart';
+import '../../core/widgets/notifications_bell.dart';
 import '../analytics/analytics_screen.dart';
 import '../cod/cod_manager_screen.dart';
 import '../delivery_map/delivery_map_screen.dart';
@@ -108,6 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                               ),
                             ),
+                            const NotificationsBell(compact: true),
                             PopupMenuButton<DashboardPeriod>(
                               tooltip: l10n.last7Days,
                               onSelected: (value) {

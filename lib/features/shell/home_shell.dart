@@ -45,10 +45,18 @@ class _HomeShellState extends State<HomeShell> {
     try {
       await FenneclyDataService.syncAll(store);
     } catch (_) {}
+    if (!mounted) return;
+    // Realtime: live notifications from the shared table (mirrors the web).
+    FenneclyDataService.subscribeNotifications((payload) {
+      context.read<AppStore>().upsertNotification(payload);
+    });
+    // initial bell reflect
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    FenneclyDataService.unsubscribeNotifications();
     _pageController.dispose();
     super.dispose();
   }

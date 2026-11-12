@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/data/app_store.dart';
@@ -273,8 +273,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(
                   children: [
                     InitialsAvatar(
-                      name: storeName,
+                      name: store.fenneclyProfileName.isNotEmpty
+                           ? store.fenneclyProfileName
+                           : storeName,
                       size: AppSizes.avatarLg,
+                       imageUrl: store.fenneclyAvatarUrl.isEmpty
+                           ? null
+                           : store.fenneclyAvatarUrl,
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -282,18 +287,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            storeName,
+                            store.fenneclyProfileName.isNotEmpty
+                                ? store.fenneclyProfileName
+                                : storeName,
                             style: texts.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            l10n.profileInitialsHint,
+store.fenneclyProfileEmail.isNotEmpty
+                                 ? store.fenneclyProfileEmail
+                                 : l10n.profileInitialsHint,
                             style: texts.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
+                          if (store.fenneclyStoreLogoUrl.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                _StoreLogo(
+                                  url: store.fenneclyStoreLogoUrl,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Flexible(
+                                  child: Text(
+                                    store.fenneclyStoreName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: texts.labelSmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -540,6 +572,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+class _StoreLogo extends StatelessWidget {
+  const _StoreLogo({required this.url, this.size = 44});
+
+  final String url;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: scheme.primary.withValues(alpha: 0.12),
+            child: Icon(
+              Icons.storefront_rounded,
+              color: scheme.primary,
+              size: size * 0.55,
+            ),
+          ),
+          loadingBuilder: (context, child, progress) =>
+              progress == null ? child : Container(color: scheme.primary.withValues(alpha: 0.08)),
+        ),
+      ),
+    );
+  }
+}
 class _ThemeModeSelector extends StatelessWidget {
   const _ThemeModeSelector({required this.value, required this.onChanged});
 

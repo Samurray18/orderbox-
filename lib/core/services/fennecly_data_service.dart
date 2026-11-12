@@ -17,6 +17,7 @@ class FenneclyStoreInfo {
     this.slug,
     this.currency = 'DZD',
     this.isDefault = false,
+    this.logoUrl,
   });
   final String id;
   final String ownerId;
@@ -24,6 +25,7 @@ class FenneclyStoreInfo {
   final String? slug;
   final String currency;
   final bool isDefault;
+  final String? logoUrl;
 
   factory FenneclyStoreInfo.fromMap(Map<String, dynamic> m) => FenneclyStoreInfo(
         id: (m['id'] ?? '').toString(),
@@ -32,6 +34,7 @@ class FenneclyStoreInfo {
         slug: m['slug']?.toString(),
         currency: (m['currency'] ?? 'DZD').toString(),
         isDefault: m['is_default'] == true,
+        logoUrl: m['logo_url']?.toString(),
       );
 }
 
@@ -67,7 +70,7 @@ class FenneclyDataService {
     try {
       final res = await _db
           .from('stores')
-          .select('id,owner_id,name,slug,currency,is_default,is_active,created_at')
+          .select('id,owner_id,name,slug,currency,is_default,is_active,created_at,logo_url')
           .eq('owner_id', user.id)
           .order('created_at', ascending: true);
       if (res is! List) return const [];
@@ -97,7 +100,7 @@ class FenneclyDataService {
     try {
       final storesRes = await _db
           .from('stores')
-          .select('id,owner_id,name,slug,currency,is_default,is_active,created_at')
+          .select('id,owner_id,name,slug,currency,is_default,is_active,created_at,logo_url')
           .eq('owner_id', user.id)
           .order('created_at', ascending: true);
       final stores = (storesRes as List)
@@ -138,6 +141,25 @@ class FenneclyDataService {
     }
   }
 
+  /// Pulls the shared-accounts profile row (name, email, avatar_url).
+  /// The web stores profile fields there; the mobile app gets them after
+  /// login/sync and shows the avatar in-app.
+  static Future<Map<String, dynamic>?> fetchProfile() async {
+  final user = _db.auth.currentUser;
+  if (user == null) return null;
+  try {
+    final res = await _db
+        .from('profiles')
+        .select('id,name,email,avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (res == null) return null;
+    return Map<String, dynamic>.from(res as Map);
+  } catch (_) {
+    return null;
+  }
+}
+
   /// Full sync: store info, products, orders+items, shipping. Replaces AppStore data.
   static Future<FenneclySyncResult> syncAll(AppStore store) async {
     final user = _db.auth.currentUser;
@@ -153,8 +175,24 @@ class FenneclyDataService {
     try {
       currentStore = await resolveCurrentStore();
       if (currentStore != null) {
-        store.setFenneclyStore(name: currentStore.name, id: currentStore.id);
+        store.setFenneclyStore(
+          name: currentStore.name,
+          id: currentStore.id,
+          logoUrl: currentStore.logoUrl,
+        );
       }
+
+      // Profile (shared accounts: same profile as the web dashboard).
+      try {
+        final profile = await fetchProfile();
+        if (profile != null) {
+          store.setFenneclyProfile(
+            name: profile['name']?.toString(),
+            email: profile['email']?.toString(),
+            avatarUrl: profile['avatar_url']?.toString(),
+          );
+        }
+      } catch (_) {}
 
       // Products (same scoping as webapp)
       try {

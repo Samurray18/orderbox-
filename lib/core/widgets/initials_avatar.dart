@@ -10,18 +10,23 @@ class InitialsAvatar extends StatelessWidget {
     required this.name,
     this.size = AppSizes.avatar,
     this.onTap,
+    this.imageUrl,
   });
 
   final String name;
   final double size;
   final VoidCallback? onTap;
 
+  /// Optional image URL (e.g. profiles.avatar_url from the shared Fennecly
+  /// backend). When present and non-empty it is rendered inside the circle.
+  final String? imageUrl;
+
   @override
   Widget build(BuildContext context) {
     final gradient =
         AppColors.avatarGradients[colorSeedOf(name) %
             AppColors.avatarGradients.length];
-    final avatar = Container(
+    final fallback = Container(
       width: size,
       height: size,
       alignment: Alignment.center,
@@ -44,6 +49,24 @@ class InitialsAvatar extends StatelessWidget {
         ),
       ),
     );
+    final url = imageUrl?.trim() ?? '';
+    final avatar = url.isEmpty
+        ? fallback
+        : ClipOval(
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return fallback;
+                },
+              ),
+            ),
+          );
 
     if (onTap == null) return avatar;
     return GestureDetector(onTap: onTap, child: avatar);

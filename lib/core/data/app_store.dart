@@ -96,6 +96,10 @@ class AppStore extends ChangeNotifier {
   static const _kDefaultCompany = 'orderbox.default_company.v1';
   static const _kFenneclyStoreName = 'orderbox.fennecly.storeName';
   static const _kFenneclyStoreId = 'orderbox.fennecly.storeId';
+  static const _kFenneclyStoreLogoUrl = 'orderbox.fennecly.storeLogoUrl';
+  static const _kFenneclyProfileName = 'orderbox.fennecly.profileName';
+  static const _kFenneclyProfileEmail = 'orderbox.fennecly.profileEmail';
+  static const _kFenneclyAvatarUrl = 'orderbox.fennecly.avatarUrl';
   static const _kFenneclyLastSync = 'orderbox.fennecly.lastSync';
   static const _kDataSource = 'orderbox.dataSource'; // local | fennecly
   static const _kMigratedToDrift = 'orderbox.migrated.drift.v3';
@@ -111,6 +115,10 @@ class AppStore extends ChangeNotifier {
   String _customStoreName = '';
   String _fenneclyStoreName = '';
   String _fenneclyStoreId = '';
+  String _fenneclyStoreLogoUrl = '';
+  String _fenneclyProfileName = '';
+  String _fenneclyProfileEmail = '';
+  String _fenneclyAvatarUrl = '';
   DateTime? _fenneclyLastSync;
   String _dataSource = 'local';
   // Fennecly-inspired shipping options: delivery companies + wilaya home/office tariffs
@@ -132,6 +140,10 @@ class AppStore extends ChangeNotifier {
   String get customStoreName => _customStoreName;
   String get fenneclyStoreName => _fenneclyStoreName;
   String get fenneclyStoreId => _fenneclyStoreId;
+  String get fenneclyStoreLogoUrl => _fenneclyStoreLogoUrl;
+  String get fenneclyProfileName => _fenneclyProfileName;
+  String get fenneclyProfileEmail => _fenneclyProfileEmail;
+  String get fenneclyAvatarUrl => _fenneclyAvatarUrl;
   DateTime? get fenneclyLastSync => _fenneclyLastSync;
   bool get isFenneclyData => _dataSource == 'fennecly';
   String get dataSource => _dataSource;
@@ -141,13 +153,34 @@ class AppStore extends ChangeNotifier {
     return _customStoreName.trim().isEmpty ? fallback : _customStoreName.trim();
   }
 
-  void setFenneclyStore({required String name, required String id}) {
+  void setFenneclyStore({
+    required String name,
+    required String id,
+    String? logoUrl,
+  }) {
     _fenneclyStoreName = name.trim();
     _fenneclyStoreId = id;
+    if (logoUrl != null && logoUrl.trim().isNotEmpty) {
+      _fenneclyStoreLogoUrl = logoUrl.trim();
+      _prefs.setString(_kFenneclyStoreLogoUrl, _fenneclyStoreLogoUrl);
+    }
     _dataSource = 'fennecly';
     _prefs.setString(_kFenneclyStoreName, _fenneclyStoreName);
     _prefs.setString(_kFenneclyStoreId, _fenneclyStoreId);
     _prefs.setString(_kDataSource, _dataSource);
+    notifyListeners();
+  }
+
+  void setFenneclyProfile({String? name, String? email, String? avatarUrl}) {
+    final nextName = name?.trim() ?? '';
+    final nextEmail = email?.trim() ?? '';
+    final nextAvatar = avatarUrl?.trim() ?? '';
+    _fenneclyProfileName = nextName;
+    _fenneclyProfileEmail = nextEmail;
+    _fenneclyAvatarUrl = nextAvatar;
+    _prefs.setString(_kFenneclyProfileName, nextName);
+    _prefs.setString(_kFenneclyProfileEmail, nextEmail);
+    _prefs.setString(_kFenneclyAvatarUrl, nextAvatar);
     notifyListeners();
   }
 
@@ -163,10 +196,18 @@ class AppStore extends ChangeNotifier {
     _dataSource = 'local';
     _fenneclyStoreName = '';
     _fenneclyStoreId = '';
+    _fenneclyStoreLogoUrl = '';
+    _fenneclyProfileName = '';
+    _fenneclyProfileEmail = '';
+    _fenneclyAvatarUrl = '';
     _fenneclyLastSync = null;
     _prefs.setString(_kDataSource, _dataSource);
     _prefs.remove(_kFenneclyStoreName);
     _prefs.remove(_kFenneclyStoreId);
+    _prefs.remove(_kFenneclyStoreLogoUrl);
+    _prefs.remove(_kFenneclyProfileName);
+    _prefs.remove(_kFenneclyProfileEmail);
+    _prefs.remove(_kFenneclyAvatarUrl);
     _prefs.remove(_kFenneclyLastSync);
     notifyListeners();
   }
@@ -250,6 +291,10 @@ class AppStore extends ChangeNotifier {
     _customStoreName = _prefs.getString(_kStoreName) ?? '';
     _fenneclyStoreName = _prefs.getString(_kFenneclyStoreName) ?? '';
     _fenneclyStoreId = _prefs.getString(_kFenneclyStoreId) ?? '';
+    _fenneclyStoreLogoUrl = _prefs.getString(_kFenneclyStoreLogoUrl) ?? '';
+    _fenneclyProfileName = _prefs.getString(_kFenneclyProfileName) ?? '';
+    _fenneclyProfileEmail = _prefs.getString(_kFenneclyProfileEmail) ?? '';
+    _fenneclyAvatarUrl = _prefs.getString(_kFenneclyAvatarUrl) ?? '';
     _dataSource = _prefs.getString(_kDataSource) ?? 'local';
     final lastSyncRaw = _prefs.getString(_kFenneclyLastSync);
     _fenneclyLastSync = lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw);

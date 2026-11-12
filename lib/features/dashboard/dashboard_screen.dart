@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -94,7 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            _StoreAvatar(name: store.storeNameOr(l10n.storeDefault)),
+                            _StoreAvatar(name: store.storeNameOr(l10n.storeDefault), logoUrl: store.fenneclyStoreLogoUrl),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
@@ -555,35 +555,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class _StoreAvatar extends StatelessWidget {
-  const _StoreAvatar({required this.name});
+  const _StoreAvatar({required this.name, this.logoUrl});
 
   final String name;
+  final String? logoUrl;
 
-  @override
-  Widget build(BuildContext context) {
-    final initials = name.trim().isEmpty ? '?' : initialsOf(name);
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: AppColors.primaryGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+  Widget _monogram(BuildContext context, String initials) => Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: AppColors.primaryGradient,
           ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          initials,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          child: Center(
+            child: Text(
+              initials,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = name.trim().isEmpty ? '?' : initialsOf(name);
+    final url = logoUrl?.trim() ?? 
+''
+;
+
+    if (url.isEmpty) return _monogram(context, initials);
+
+    return ClipOval(
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _monogram(context, initials),
+          loadingBuilder: (context, child, progress) =>
+              progress == null ? child : _monogram(context, initials),
         ),
       ),
     );

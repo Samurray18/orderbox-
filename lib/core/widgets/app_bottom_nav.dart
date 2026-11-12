@@ -19,7 +19,8 @@ class NavDestination {
 /// Floating pill navigation bar.
 ///
 /// V2: taller, softer radius, frosted surface, gradient pill for the
-/// active tab (purple gradient + glow shadow) instead of a flat tint.
+/// active tab (purple gradient + glow shadow) with a traveling
+/// shimmer sweep.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -74,7 +75,7 @@ class AppBottomNav extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.destination,
     required this.selected,
@@ -86,6 +87,44 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmer = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1700),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.selected) _shimmer.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _NavItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected) {
+      if (!_shimmer.isAnimating) _shimmer.repeat(reverse: true);
+    } else if (_shimmer.isAnimating) {
+      _shimmer.stop();
+      _shimmer.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _shimmer.dispose();
+    super.dispose();
+  }
+
+  bool get _selected => widget.selected;
+  NavDestination get destination => widget.destination;
+  VoidCallback get onTap => widget.onTap;
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final texts = Theme.of(context).textTheme;
@@ -93,7 +132,7 @@ class _NavItem extends StatelessWidget {
     const duration = Duration(milliseconds: 320);
 
     return Semantics(
-      selected: selected,
+      selected: _selected,
       button: true,
       label: destination.label,
       child: Material(
@@ -106,15 +145,17 @@ class _NavItem extends StatelessWidget {
             curve: Curves.easeOutCubic,
             margin: const EdgeInsetsDirectional.symmetric(horizontal: 2),
             padding: EdgeInsetsDirectional.symmetric(
-              horizontal: selected ? 8 : 2,
+              horizontal: _selected ? 8 : 2,
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              gradient: selected ? AppColors.primaryGradient : null,
-              boxShadow: selected
+              gradient: _selected ? AppColors.primaryGradient : null,
+              boxShadow: _selected
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: dark ? 0.5 : 0.42),
+                        color: AppColors.primary.withValues(
+                          alpha: dark ? 0.5 : 0.42,
+                        ),
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -122,32 +163,69 @@ class _NavItem extends StatelessWidget {
                   : null,
               borderRadius: BorderRadius.circular(22),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  selected ? destination.selectedIcon : destination.icon,
-                  size: AppSizes.iconMd + (selected ? 2 : 0),
-                  color: selected ? Colors.white : scheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 3),
-                AnimatedDefaultTextStyle(
-                  duration: duration,
-                  style: (texts.labelSmall ?? const TextStyle()).copyWith(
-                    fontSize: 10,
-                    height: 1.1,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                    color: selected ? Colors.white : scheme.onSurfaceVariant,
-                    letterSpacing: 0.2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Stack(
+                fit: StackFit.expand,
+                alignment: Alignment.center,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _selected ? destination.selectedIcon : destination.icon,
+                        size: AppSizes.iconMd + (_selected ? 2 : 0),
+                        color: _selected ? Colors.white : scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        destination.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: (texts.labelSmall ?? const TextStyle()).copyWith(
+                          fontSize: 10,
+                          height: 1.1,
+                          fontWeight:
+                              _selected ? FontWeight.w800 : FontWeight.w500,
+                          color: _selected
+                              ? Colors.white
+                              : scheme.onSurfaceVariant,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    destination.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
+                  if (_selected)
+                    AnimatedBuilder(
+                      animation: _shimmer,
+                      builder: (context, _) {
+                        final v = _shimmer.value;
+                        return Transform.translate(
+                          offset: Offset(-90 + v * 180, 0),
+                          child: IgnorePointer(
+                            child: SizedBox(
+                              width: 60,
+                              height: 48,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0),
+                                      Colors.white.withValues(alpha: 0.55),
+                                      Colors.white.withValues(alpha: 0),
+                                    ],
+                                    stops: const [0.0, 0.5, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
         ),

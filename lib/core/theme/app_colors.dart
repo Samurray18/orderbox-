@@ -69,6 +69,28 @@ abstract final class AppColors {
     end: Alignment.bottomRight,
   );
 
+  // --- v2 premium multi-stop gradients -------------------------------
+  static const LinearGradient revenueHeroV2 = LinearGradient(
+    colors: [Color(0xFF7A4DFF), Color(0xFF5B2EE0), Color(0xFF2D1375)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    stops: [0.0, 0.52, 1.0],
+  );
+
+  static const LinearGradient mintDeepGradient = LinearGradient(
+    colors: [Color(0xFF17D3B2), Color(0xFF079E86), Color(0xFF053B31)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    stops: [0.0, 0.55, 1.0],
+  );
+
+  static const LinearGradient amberDeepGradient = LinearGradient(
+    colors: [Color(0xFFFFC35B), Color(0xFFF2994A), Color(0xFF7A3505)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    stops: [0.0, 0.55, 1.0],
+  );
+
   /// App-wide backdrop: lavender wash (light) / deep aubergine (dark).
   static const LinearGradient backdropLight = LinearGradient(
     colors: [Color(0xFFF0ECFC), Color(0xFFE9E3FA), Color(0xFFF6F3FE)],

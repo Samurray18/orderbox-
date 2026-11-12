@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -217,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     AppSpacing.sm,
                   ),
                   child: SoftCard(
-                    gradient: AppColors.revenueGradient,
+                    gradient: AppColors.revenueHeroV2,
                     border: false,
                     radius: 26,
                     padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
@@ -349,7 +349,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Expanded(
                         child: SoftCard(
-                          gradient: AppColors.mintGradient,
+                          gradient: AppColors.mintDeepGradient,
                           border: false,
                           radius: 22,
                           padding: const EdgeInsetsDirectional.all(AppSpacing.md),
@@ -749,7 +749,7 @@ class _RevenueBars extends StatelessWidget {
                     Container(
                       height: math.max(6, (series[i].value / maxVal) * 92),
                       decoration: BoxDecoration(
-                        gradient: selectedIndex == i ? AppColors.revenueGradient : null,
+                        gradient: selectedIndex == i ? AppColors.revenueHeroV2 : null,
                         color: selectedIndex == i ? null : scheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(999),
                       ),

@@ -48,10 +48,13 @@ class SoftCard extends StatelessWidget {
 
     final content = Padding(padding: padding, child: child);
 
+    final bool useGlow = shadow && gradient != null;
     return Padding(
       padding: margin ?? EdgeInsets.zero,
       child: DecoratedBox(
-        decoration: decoration,
+        decoration: decoration.copyWith(
+          boxShadow: useGlow ? AppShadows.glow(context) : (shadow ? AppShadows.card(context) : null),
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(radius),
           clipBehavior: clipBehavior,

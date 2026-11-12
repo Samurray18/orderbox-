@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -143,16 +144,16 @@ class FenneclyDataService {
     }
   }
 
-  /// Pulls the shared-accounts profile row (name, email, avatar_url).
-  /// The web stores profile fields there; the mobile app gets them after
-  /// login/sync and shows the avatar in-app.
+  /// Pulls the shared-accounts profile row (name, email, avatar_url, credits,
+  /// plan). The web stores profile fields here; the mobile app gets them
+  /// after login/sync and shows the avatar + credits chip in-app.
   static Future<Map<String, dynamic>?> fetchProfile() async {
     final user = _db.auth.currentUser;
     if (user == null) return null;
     try {
       final res = await _db
           .from('profiles')
-          .select('id,name,email,avatar_url')
+          .select('id,name,email,avatar_url,credits,plan,referral_code')
           .eq('id', user.id)
           .maybeSingle();
       if (res == null) return null;
@@ -288,6 +289,45 @@ class FenneclyDataService {
     _activeNotificationsChannel = null;
   }
 
+  /// Realtime channel on the shared profiles table filtered to the
+  /// signed-in user. Used so credits/plan refresh everywhere the user is
+  /// already online, without needing manual sync.
+  static RealtimeChannel? _activeCreditsChannel;
+
+  static void subscribeCredits(void Function(Map<String, dynamic>) onEvent) {
+    unsubscribeCredits();
+    final user = _db.auth.currentUser;
+    if (user == null) return;
+    final channel = _db
+        .channel('fennecly-profile-${user.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profiles',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: user.id,
+          ),
+          callback: (PostgresChangePayload payload) {
+            if (payload.newRecord != null) {
+              onEvent(Map<String, dynamic>.from(payload.newRecord!));
+            }
+          },
+        );
+    _activeCreditsChannel = channel;
+    channel.subscribe();
+  }
+
+  static void unsubscribeCredits() {
+    final active = _activeCreditsChannel;
+    if (active == null) return;
+    try {
+      _db.removeChannel(active);
+    } catch (_) {}
+    _activeCreditsChannel = null;
+  }
+
   /// Full sync: store info, products, orders+items, shipping. Replaces AppStore data.
   static Future<FenneclySyncResult> syncAll(AppStore store) async {
     final user = _db.auth.currentUser;
@@ -318,6 +358,10 @@ class FenneclyDataService {
             name: profile['name']?.toString(),
             email: profile['email']?.toString(),
             avatarUrl: profile['avatar_url']?.toString(),
+            credits: profile['credits'] is num
+                ? (profile['credits'] as num).toInt()
+                : (int.tryParse(profile['credits']?.toString() ?? '') ?? 0),
+            plan: profile['plan']?.toString(),
           );
         }
       } catch (_) {}
@@ -1159,6 +1203,87 @@ class FenneclyDataService {
       return (res as Map)['chargily_enabled'] == true;
     } catch (_) {}
     return null;
+  }
+
+  // -------------------------------------------------------------------
+  // Credits / payments (mirrors the web credits page)
+  // -------------------------------------------------------------------
+
+  /// Invokes the same Edge Function the web uses
+  /// (`create-chargily-checkout`). Returns the Chargily checkout URL the
+  /// caller should open in the system browser.
+  static Future<String?> chargilyCheckoutUrl({
+    required int amount,
+    required String packId,
+    required String orderId,
+    String? successUrl,
+  }) async {
+    final user = _db.auth.currentUser;
+    if (user == null) return null;
+    try {
+      final record = await _db
+          .from('profiles')
+          .select('name, email')
+          .eq('id', user.id)
+          .maybeSingle();
+      final name = record == null ? null : record['name']?.toString();
+      final email = record == null ? null : record['email']?.toString();
+      final customerName = (name?.isNotEmpty ?? false
+              ? name!
+              : (email?.isNotEmpty ?? false ? email! : (user.email ?? 'Merchant')))
+          .toString();
+      final customerEmail = email ?? user.email ?? '';
+      final response = await _db.functions.invoke(
+        'create-chargily-checkout',
+        body: {
+          'amount': amount,
+          'orderId': orderId,
+          'customerName': customerName,
+          'customerEmail': customerEmail,
+          'successUrl': successUrl ??
+              'https://fennecly.online/dashboard/credits?payment=success&pack=$packId&mobile=1',
+          'failureUrl': 'https://fennecly.online/dashboard/credits?payment=failed',
+        },
+      );
+      final data = response.data;
+      if (data is Map) return data['checkout_url']?.toString();
+    } catch (_) {}
+    return null;
+  }
+
+  /// Upload a CCP/BaridiMob transfer screenshot to the public
+  /// payment-proofs bucket and insert a payment_submissions row — same
+  /// shape the web app writes, reviewed by the Fennecly admin.
+  static Future<bool> submitPaymentProof({
+    required List<int> bytes,
+    required String filename,
+    required String packId,
+    required int amount,
+    required String mimeType,
+  }) async {
+    final user = _db.auth.currentUser;
+    if (user == null) return false;
+    try {
+      final ext = (filename.split('.').lastOrNull ?? 'png').toLowerCase();
+      final safeExt = ext == 'jpeg' ? 'jpg' : ext;
+      final path = '${user.id}/${DateTime.now().millisecondsSinceEpoch}-$packId.$safeExt';
+      await _db.storage.from('payment-proofs').uploadBinary(
+            path,
+            Uint8List.fromList(bytes),
+            fileOptions: FileOptions(contentType: mimeType, upsert: false),
+          );
+      final submission = <String, dynamic>{
+        'user_id': user.id,
+        'plan': packId,
+        'amount': amount,
+        'payment_method': 'ccp',
+        'proof_url': path,
+      };
+      await _db.from('payment_submissions').insert(submission);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<bool> updateChargilyEnabled(bool enabled) async {

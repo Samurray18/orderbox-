@@ -17,6 +17,8 @@ import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/soft_card.dart';
 import '../../core/widgets/notifications_bell.dart';
+import '../../core/widgets/credits_led_chip.dart';
+import '../credits/credits_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../cod/cod_manager_screen.dart';
 import '../delivery_map/delivery_map_screen.dart';
@@ -108,6 +110,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       letterSpacing: 1.6,
                                     ),
                               ),
+                            ),
+                            CreditsLedChip(
+                              credits: store.fenneclyCredits,
+                              plan: store.fenneclyPlan,
+                              isUnlimited: store.isUnlimitedCredits,
+                              onTap: () {
+                                AppHaptics.select();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreditsScreen(),
+                                  ),
+                                );
+                              },
                             ),
                             const NotificationsBell(compact: true),
                             PopupMenuButton<DashboardPeriod>(

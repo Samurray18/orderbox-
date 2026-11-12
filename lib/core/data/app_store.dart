@@ -101,6 +101,8 @@ class AppStore extends ChangeNotifier {
   static const _kFenneclyProfileName = 'orderbox.fennecly.profileName';
   static const _kFenneclyProfileEmail = 'orderbox.fennecly.profileEmail';
   static const _kFenneclyAvatarUrl = 'orderbox.fennecly.avatarUrl';
+  static const _kFenneclyCredits = 'orderbox.fennecly.credits';
+  static const _kFenneclyPlan = 'orderbox.fennecly.plan';
   static const _kFenneclyLastSync = 'orderbox.fennecly.lastSync';
   static const _kDataSource = 'orderbox.dataSource'; // local | fennecly
   static const _kMigratedToDrift = 'orderbox.migrated.drift.v3';
@@ -121,6 +123,8 @@ class AppStore extends ChangeNotifier {
   String _fenneclyProfileName = '';
   String _fenneclyProfileEmail = '';
   String _fenneclyAvatarUrl = '';
+  int _fenneclyCredits = 0;
+  String _fenneclyPlan = 'free';
   DateTime? _fenneclyLastSync;
   String _dataSource = 'local';
   // Fennecly-inspired shipping options: delivery companies + wilaya home/office tariffs
@@ -146,6 +150,9 @@ class AppStore extends ChangeNotifier {
   String get fenneclyProfileName => _fenneclyProfileName;
   String get fenneclyProfileEmail => _fenneclyProfileEmail;
   String get fenneclyAvatarUrl => _fenneclyAvatarUrl;
+  int get fenneclyCredits => _fenneclyCredits;
+  String get fenneclyPlan => _fenneclyPlan;
+  bool get isUnlimitedCredits => _fenneclyPlan == 'business';
   DateTime? get fenneclyLastSync => _fenneclyLastSync;
   bool get isFenneclyData => _dataSource == 'fennecly';
   String get dataSource => _dataSource;
@@ -173,16 +180,27 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFenneclyProfile({String? name, String? email, String? avatarUrl}) {
-    final nextName = name?.trim() ?? '';
-    final nextEmail = email?.trim() ?? '';
-    final nextAvatar = avatarUrl?.trim() ?? '';
-    _fenneclyProfileName = nextName;
-    _fenneclyProfileEmail = nextEmail;
-    _fenneclyAvatarUrl = nextAvatar;
-    _prefs.setString(_kFenneclyProfileName, nextName);
-    _prefs.setString(_kFenneclyProfileEmail, nextEmail);
-    _prefs.setString(_kFenneclyAvatarUrl, nextAvatar);
+  void setFenneclyProfile({
+    String? name,
+    String? email,
+    String? avatarUrl,
+    int? credits,
+    String? plan,
+  }) {
+    _fenneclyProfileName = (name?.trim() ?? _fenneclyProfileName);
+    _fenneclyProfileEmail = (email?.trim() ?? _fenneclyProfileEmail);
+    _fenneclyAvatarUrl = (avatarUrl?.trim() ?? _fenneclyAvatarUrl);
+    if (credits != null) {
+      _fenneclyCredits = credits;
+      _prefs.setInt(_kFenneclyCredits, credits);
+    }
+    if (plan != null && plan.trim().isNotEmpty) {
+      _fenneclyPlan = plan.trim();
+      _prefs.setString(_kFenneclyPlan, _fenneclyPlan);
+    }
+    _prefs.setString(_kFenneclyProfileName, _fenneclyProfileName);
+    _prefs.setString(_kFenneclyProfileEmail, _fenneclyProfileEmail);
+    _prefs.setString(_kFenneclyAvatarUrl, _fenneclyAvatarUrl);
     notifyListeners();
   }
 
@@ -202,6 +220,8 @@ class AppStore extends ChangeNotifier {
     _fenneclyProfileName = '';
     _fenneclyProfileEmail = '';
     _fenneclyAvatarUrl = '';
+    _fenneclyCredits = 0;
+    _fenneclyPlan = 'free';
     _fenneclyLastSync = null;
     _prefs.setString(_kDataSource, _dataSource);
     _prefs.remove(_kFenneclyStoreName);
@@ -210,6 +230,8 @@ class AppStore extends ChangeNotifier {
     _prefs.remove(_kFenneclyProfileName);
     _prefs.remove(_kFenneclyProfileEmail);
     _prefs.remove(_kFenneclyAvatarUrl);
+    _prefs.remove(_kFenneclyCredits);
+    _prefs.remove(_kFenneclyPlan);
     _prefs.remove(_kFenneclyLastSync);
     notifyListeners();
   }
@@ -297,6 +319,8 @@ class AppStore extends ChangeNotifier {
     _fenneclyProfileName = _prefs.getString(_kFenneclyProfileName) ?? '';
     _fenneclyProfileEmail = _prefs.getString(_kFenneclyProfileEmail) ?? '';
     _fenneclyAvatarUrl = _prefs.getString(_kFenneclyAvatarUrl) ?? '';
+    _fenneclyCredits = _prefs.getInt(_kFenneclyCredits) ?? 0;
+    _fenneclyPlan = _prefs.getString(_kFenneclyPlan) ?? 'free';
     _dataSource = _prefs.getString(_kDataSource) ?? 'local';
     final lastSyncRaw = _prefs.getString(_kFenneclyLastSync);
     _fenneclyLastSync = lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw);

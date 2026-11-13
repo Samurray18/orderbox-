@@ -63,14 +63,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
         () => _CustomerRow(
           key: key,
           name: o.customerName.trim().isEmpty
-              ? (o.phone.isNotEmpty ? o.phone : '—')
+              ? (o.phone.isNotEmpty ? o.phone : 'â€”')
               : o.customerName.trim(),
           phone: o.phone.trim(),
         ),
       );
       row.add(o);
       if (row.name == row.phone && o.customerName.trim().isNotEmpty) {
-        // phone-only key: keep — orders name wins next time we build
+        // phone-only key: keep â€” orders name wins next time we build
       }
     }
     final list = map.values.toList();
@@ -164,7 +164,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       _TagChip(
                         icon: Icons.location_on_rounded,
                         label: customer.wilaya.isEmpty
-                            ? (ar ? '—' : 'Wilaya')
+                            ? (ar ? 'â€”' : 'Wilaya')
                             : customer.wilaya,
                       ),
                       _TagChip(
@@ -185,7 +185,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    ar ? 'آخر الطلبات' : 'Dernières commandes',
+                    ar ? 'Ø¢Ø®Ø± Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'DerniÃ¨res commandes',
                     style: Theme.of(sheetContext)
                         .textTheme
                         .titleSmall
@@ -284,7 +284,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
         : customers.where((c) => c.orders > 1).length / totalCustomers * 100;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -363,7 +363,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         Expanded(
                           child: _CustomerStatCard(
                             icon: Icons.groups_rounded,
-                            label: ar ? 'العملاء' : 'Clients',
+                            label: ar ? 'Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡' : 'Clients',
                             value: formatNumber(context, totalCustomers),
                           ),
                         ),
@@ -371,7 +371,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         Expanded(
                           child: _CustomerStatCard(
                             icon: Icons.payments_rounded,
-                            label: ar ? 'المبيعات' : 'CA',
+                            label: ar ? 'Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª' : 'CA',
                             value: formatCurrency(context, totalRevenue, compact: true),
                           ),
                         ),
@@ -379,7 +379,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         Expanded(
                           child: _CustomerStatCard(
                             icon: Icons.shopping_bag_rounded,
-                            label: ar ? 'متوسط السلة' : 'Panier',
+                            label: ar ? 'Ù…ØªÙˆØ³Ø· Ø§Ù„Ø³Ù„Ø©' : 'Panier',
                             value: formatCurrency(context, avgBasket, compact: true),
                           ),
                         ),
@@ -388,7 +388,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     _CustomerStatCard(
                       icon: Icons.loyalty_rounded,
-                      label: ar ? 'نسبة العملاء العائدين' : 'Taux de fidélisation',
+                      label: ar ? 'Ù†Ø³Ø¨Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø§Ù„Ø¹Ø§Ø¦Ø¯ÙŠÙ†' : 'Taux de fidÃ©lisation',
                       value: formatPercent(context, repeatRate),
                       compact: true,
                     ),
@@ -414,9 +414,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     SectionHeader(
-                      title: ar ? 'القائمة' : 'Classement',
+                      title: ar ? 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©' : 'Classement',
                       subtitle:
-                          '${formatNumber(context, filtered.length)} ${ar ? 'نتيجة' : 'résultats'}',
+                          '${formatNumber(context, filtered.length)} ${ar ? 'Ù†ØªÙŠØ¬Ø©' : 'rÃ©sultats'}',
                     ),
                   ],
                 ),
@@ -478,7 +478,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                   [
                                     if (c.phone.isNotEmpty) formatPhone(c.phone),
                                     '${formatNumber(context, c.orders)} ${l10n.ordersWord}',
-                                  ].join(' · '),
+                                  ].join(' Â· '),
                                   style: texts.bodySmall?.copyWith(
                                       color: scheme.onSurfaceVariant),
                                 ),

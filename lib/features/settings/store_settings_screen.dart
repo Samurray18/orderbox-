@@ -120,8 +120,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     showAppSnackBar(
       context,
       (ok && chargilyOk)
-          ? (ar ? 'تم الحفظ ✓' : 'Enregistré ✓')
-          : (ar ? 'بعض الحقول لم تُحفظ' : 'Certains champs n’ont pas été enregistrés'),
+          ? (ar ? 'ØªÙ… Ø§Ù„Ø­ÙØ¸ âœ“' : 'EnregistrÃ© âœ“')
+          : (ar ? 'Ø¨Ø¹Ø¶ Ø§Ù„Ø­Ù‚ÙˆÙ„ Ù„Ù… ØªÙØ­ÙØ¸' : 'Certains champs nâ€™ont pas Ã©tÃ© enregistrÃ©s'),
       icon: (ok && chargilyOk)
           ? Icons.check_circle_rounded
           : Icons.error_outline_rounded,
@@ -136,10 +136,10 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     final loggedIn = FenneclySupabase.isLoggedIn;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: Text(ar ? 'إعدادات المتجر' : 'Store settings'),
+        title: Text(ar ? 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±' : 'Store settings'),
       ),
       body: AppBackdrop(
         child: _loading
@@ -172,7 +172,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                                 ),
                                 const SizedBox(width: AppSpacing.sm),
                                 Text(
-                                  ar ? 'معلومات المتجر' : 'Informations boutique',
+                                  ar ? 'Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±' : 'Informations boutique',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
@@ -185,14 +185,14 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                               controller: _nameController,
                               textCapitalization: TextCapitalization.words,
                               decoration: InputDecoration(
-                                labelText: ar ? 'اسم المتجر' : 'Nom de la boutique',
+                                labelText: ar ? 'Ø§Ø³Ù… Ø§Ù„Ù…ØªØ¬Ø±' : 'Nom de la boutique',
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),
                             DropdownButtonFormField<String>(
                               initialValue: _category,
                               decoration: InputDecoration(
-                                labelText: ar ? 'الفئة' : 'Catégorie',
+                                labelText: ar ? 'Ø§Ù„ÙØ¦Ø©' : 'CatÃ©gorie',
                               ),
                               items: [
                                 for (final category in _categories)
@@ -212,14 +212,14 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                               controller: _descriptionController,
                               maxLines: 3,
                               decoration: InputDecoration(
-                                labelText: ar ? 'الوصف' : 'Description',
+                                labelText: ar ? 'Ø§Ù„ÙˆØµÙ' : 'Description',
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),
                             DropdownButtonFormField<String>(
                               initialValue: _currency,
                               decoration: InputDecoration(
-                                labelText: ar ? 'العملة' : 'Devise',
+                                labelText: ar ? 'Ø§Ù„Ø¹Ù…Ù„Ø©' : 'Devise',
                               ),
                               items: [
                                 for (final currency in _currencies)
@@ -284,7 +284,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    ar ? 'الدفع عبر Chargily' : 'Paiements Chargily',
+                                    ar ? 'Ø§Ù„Ø¯ÙØ¹ Ø¹Ø¨Ø± Chargily' : 'Paiements Chargily',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleSmall
@@ -293,7 +293,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     ar
-                                        ? 'CIB / Edahabia عبر Chargily Pay'
+                                        ? 'CIB / Edahabia Ø¹Ø¨Ø± Chargily Pay'
                                         : 'CIB / Edahabia via Chargily Pay',
                                     style: Theme.of(context)
                                         .textTheme
@@ -324,7 +324,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : Text(ar ? 'حفظ' : 'Enregistrer'),
+                            : Text(ar ? 'Ø­ÙØ¸' : 'Enregistrer'),
                       ),
                     ],
                   ),
@@ -335,21 +335,21 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
   String _categoryLabel(String category, bool ar) {
     switch (category) {
       case 'fashion':
-        return ar ? 'أزياء' : 'Mode';
+        return ar ? 'Ø£Ø²ÙŠØ§Ø¡' : 'Mode';
       case 'beauty':
-        return ar ? 'تجميل' : 'Beauté';
+        return ar ? 'ØªØ¬Ù…ÙŠÙ„' : 'BeautÃ©';
       case 'electronics':
-        return ar ? 'إلكترونيات' : 'Électronique';
+        return ar ? 'Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ§Øª' : 'Ã‰lectronique';
       case 'food':
-        return ar ? 'غذاء' : 'Alimentaire';
+        return ar ? 'ØºØ°Ø§Ø¡' : 'Alimentaire';
       case 'home':
-        return ar ? 'منزل' : 'Maison';
+        return ar ? 'Ù…Ù†Ø²Ù„' : 'Maison';
       case 'services':
-        return ar ? 'خدمات' : 'Services';
+        return ar ? 'Ø®Ø¯Ù…Ø§Øª' : 'Services';
       case 'other':
-        return ar ? 'أخرى' : 'Autre';
+        return ar ? 'Ø£Ø®Ø±Ù‰' : 'Autre';
       default:
-        return ar ? 'عام' : 'Général';
+        return ar ? 'Ø¹Ø§Ù…' : 'GÃ©nÃ©ral';
     }
   }
 }
@@ -377,7 +377,7 @@ class _SignedOutState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               ar
-                  ? 'اربط حسابك أولاً لتعديل متجرك'
+                  ? 'Ø§Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø£ÙˆÙ„Ø§Ù‹ Ù„ØªØ¹Ø¯ÙŠÙ„ Ù…ØªØ¬Ø±Ùƒ'
                   : 'Connectez-vous pour modifier votre boutique',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -387,7 +387,7 @@ class _SignedOutState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             FilledButton(
               onPressed: onSignIn,
-              child: Text(ar ? 'تسجيل الدخول' : 'Se connecter'),
+              child: Text(ar ? 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Se connecter'),
             ),
           ],
         ),

@@ -15,7 +15,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Revenus — line chart with gradient fill + pinned tooltip on the last
+/// Revenus â€” line chart with gradient fill + pinned tooltip on the last
 /// point, donut of order statuses, and a weekly-change rocket card.
 class RevenueScreen extends StatefulWidget {
   const RevenueScreen({super.key});
@@ -57,14 +57,14 @@ class _RevenueScreenState extends State<RevenueScreen> {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(ar ? 'المداخيل' : 'Revenus'),
+            Text(ar ? 'Ø§Ù„Ù…Ø¯Ø§Ø®ÙŠÙ„' : 'Revenus'),
             Text(
               _periodLabel(_period, ar),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -109,7 +109,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          ar ? 'تطور المبيعات' : 'Évolution des ventes',
+                          ar ? 'ØªØ·ÙˆØ± Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª' : 'Ã‰volution des ventes',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -142,7 +142,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ar ? 'توزيع الحالات' : 'Répartition des statuts',
+                    ar ? 'ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø­Ø§Ù„Ø§Øª' : 'RÃ©partition des statuts',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -150,7 +150,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
                   const SizedBox(height: AppSpacing.md),
                   if (total == 0)
                     Text(
-                      ar ? 'لا توجد طلبات لهذه الفترة' : 'Aucune commande sur cette période',
+                      ar ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ù„Ù‡Ø°Ù‡ Ø§Ù„ÙØªØ±Ø©' : 'Aucune commande sur cette pÃ©riode',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
@@ -193,7 +193,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
                                         ),
                                   ),
                                   Text(
-                                    ar ? 'طلب' : 'commandes',
+                                    ar ? 'Ø·Ù„Ø¨' : 'commandes',
                                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                           color: scheme.onSurfaceVariant,
                                         ),
@@ -273,11 +273,11 @@ class _RevenueScreenState extends State<RevenueScreen> {
   String _periodLabel(DashboardPeriod period, bool ar) {
     switch (period) {
       case DashboardPeriod.days7:
-        return ar ? 'آخر ٧ أيام' : '7 derniers jours';
+        return ar ? 'Ø¢Ø®Ø± Ù§ Ø£ÙŠØ§Ù…' : '7 derniers jours';
       case DashboardPeriod.days30:
-        return ar ? 'آخر ٣٠ يوم' : '30 derniers jours';
+        return ar ? 'Ø¢Ø®Ø± Ù£Ù  ÙŠÙˆÙ…' : '30 derniers jours';
       case DashboardPeriod.all:
-        return ar ? 'الكل' : 'Tout';
+        return ar ? 'Ø§Ù„ÙƒÙ„' : 'Tout';
     }
   }
 }
@@ -404,7 +404,7 @@ class _MotivationCard extends StatelessWidget {
       padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
       child: Row(
         children: [
-          Text('🚀', style: const TextStyle(fontSize: 42)),
+          Text('ðŸš€', style: const TextStyle(fontSize: 42)),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -413,8 +413,8 @@ class _MotivationCard extends StatelessWidget {
               children: [
                 Text(
                   positive
-                      ? (isArabic ? 'أسبوع ممتاز!' : 'Excellente semaine !')
-                      : (isArabic ? 'الأسبوع الجاي أحسن إن شاء الله' : 'On remonte la pente !'),
+                      ? (isArabic ? 'Ø£Ø³Ø¨ÙˆØ¹ Ù…Ù…ØªØ§Ø²!' : 'Excellente semaine !')
+                      : (isArabic ? 'Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ø¬Ø§ÙŠ Ø£Ø­Ø³Ù† Ø¥Ù† Ø´Ø§Ø¡ Ø§Ù„Ù„Ù‡' : 'On remonte la pente !'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppColors.lightSurface,
                         fontWeight: FontWeight.w800,
@@ -424,11 +424,11 @@ class _MotivationCard extends StatelessWidget {
                 Text(
                   positive
                       ? (isArabic
-                          ? 'مداخلك ارتفعت بنسبة ${formatPercent(context, weeklyChange.abs())} هذه الأسبوع'
-                          : 'Votre CA a augmenté de ${formatPercent(context, weeklyChange.abs())} cette semaine')
+                          ? 'Ù…Ø¯Ø§Ø®Ù„Ùƒ Ø§Ø±ØªÙØ¹Øª Ø¨Ù†Ø³Ø¨Ø© ${formatPercent(context, weeklyChange.abs())} Ù‡Ø°Ù‡ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹'
+                          : 'Votre CA a augmentÃ© de ${formatPercent(context, weeklyChange.abs())} cette semaine')
                       : (isArabic
-                          ? 'مداخلك نزلت ${formatPercent(context, weeklyChange.abs())} مقارنة بأسبوع الماضي'
-                          : 'Votre CA a baissé de ${formatPercent(context, weeklyChange.abs())} vs la semaine dernière'),
+                          ? 'Ù…Ø¯Ø§Ø®Ù„Ùƒ Ù†Ø²Ù„Øª ${formatPercent(context, weeklyChange.abs())} Ù…Ù‚Ø§Ø±Ù†Ø© Ø¨Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù…Ø§Ø¶ÙŠ'
+                          : 'Votre CA a baissÃ© de ${formatPercent(context, weeklyChange.abs())} vs la semaine derniÃ¨re'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.lightSurface.withValues(alpha: 0.9),
                       ),

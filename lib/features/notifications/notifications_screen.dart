@@ -15,7 +15,7 @@ import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Fennecly notifications — realtime feed shared with the web app.
+/// Fennecly notifications â€” realtime feed shared with the web app.
 /// Mirrors dashboard.notifications.index.tsx: list, mark-read, delete.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -60,7 +60,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final ar = isArabicContext(context);
     showAppSnackBar(
       context,
-      ar ? 'تم تحديد الكل كمقروء' : 'All notifications marked as read',
+      ar ? 'ØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙƒÙ„ ÙƒÙ…Ù‚Ø±ÙˆØ¡' : 'All notifications marked as read',
     );
   }
 
@@ -84,17 +84,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final unread = store.unreadNotificationsCount;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: Text(ar ? 'الإشعارات' : 'Notifications'),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(ar ? 'Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª' : 'Notifications'),
         actions: [
           if (unread > 0)
             TextButton.icon(
               onPressed: _markAllRead,
               icon: const Icon(Icons.done_all_rounded, size: 18),
               label: Text(
-                ar ? 'تحديد الكل' : 'Mark all read',
+                ar ? 'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙƒÙ„' : 'Mark all read',
               ),
             ),
         ],
@@ -113,10 +116,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             child: EmptyState(
                               icon: Icons.notifications_none_rounded,
                               title: ar
-                                  ? 'لا توجد إشعارات بعد'
+                                  ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø¨Ø¹Ø¯'
                                   : 'No notifications yet',
                               body: ar
-                                  ? 'ستظهر إشعارات متجرك هنا عند وصولها.'
+                                  ? 'Ø³ØªØ¸Ù‡Ø± Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ù…ØªØ¬Ø±Ùƒ Ù‡Ù†Ø§ Ø¹Ù†Ø¯ ÙˆØµÙˆÙ„Ù‡Ø§.'
                                   :
                                   'Store notifications land here as they arrive: new orders, return requests, stock alerts.',
                             ),
@@ -269,7 +272,7 @@ class _NotificationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        isArabicContext(context) ? 'جديد' : 'NEW',
+                        isArabicContext(context) ? 'Ø¬Ø¯ÙŠØ¯' : 'NEW',
                         style: texts.labelSmall?.copyWith(
                           color: scheme.primary,
                           fontWeight: FontWeight.w800,

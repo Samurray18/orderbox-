@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/data/app_store.dart';
@@ -188,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final storeName = store.storeNameOr(l10n.storeDefault);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(

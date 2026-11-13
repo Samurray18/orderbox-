@@ -216,7 +216,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     AppHaptics.select();
     final l10n = AppLocalizations.of(context);
     if (!mounted) return;
-    showAppSnackBar(context, l10n.isArabic ? 'تم تحديث الدفع (COD)' : 'Paiement COD mis à jour');
+    showAppSnackBar(context, l10n.isArabic ? 'ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø¯ÙØ¹ (COD)' : 'Paiement COD mis Ã  jour');
   }
 
   Future<void> _createShipmentNow() async {
@@ -239,10 +239,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     setState(() => _busyShipment = false);
     if (ok) {
       AppHaptics.success();
-      showAppSnackBar(context, 'Expédition créée');
+      showAppSnackBar(context, 'ExpÃ©dition crÃ©Ã©e');
     } else {
       AppHaptics.warning();
-      showAppSnackBar(context, 'Échec de la création de l’expédition');
+      showAppSnackBar(context, 'Ã‰chec de la crÃ©ation de lâ€™expÃ©dition');
     }
   }
 
@@ -293,7 +293,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         slivers: [
           SliverAppBar(
             pinned: true,
-            backgroundColor: Colors.transparent,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             leading: const AppBackButton(),
@@ -510,22 +510,22 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  SectionHeader(title: l10n.isArabic ? 'الشحن (fennecly)' : 'Expédition (fennecly)'),
+                  SectionHeader(title: l10n.isArabic ? 'Ø§Ù„Ø´Ø­Ù† (fennecly)' : 'ExpÃ©dition (fennecly)'),
                   const SizedBox(height: AppSpacing.xs),
                   SoftCard(
                     child: Column(
                       children: [
                         _InfoRow(
                           icon: Icons.local_shipping_rounded,
-                          label: l10n.isArabic ? 'شركة التوصيل' : 'Société',
+                          label: l10n.isArabic ? 'Ø´Ø±ÙƒØ© Ø§Ù„ØªÙˆØµÙŠÙ„' : 'SociÃ©tÃ©',
                           value: order.deliveryCompany.isEmpty ? '-' : order.deliveryCompany,
                         ),
                         _InfoRow(
                           icon: order.deliveryType == 'office' ? Icons.store_rounded : Icons.home_rounded,
-                          label: l10n.isArabic ? 'نوع التوصيل' : 'Type',
+                          label: l10n.isArabic ? 'Ù†ÙˆØ¹ Ø§Ù„ØªÙˆØµÙŠÙ„' : 'Type',
                           value: order.deliveryType == 'office'
-                              ? (l10n.isArabic ? 'مكتب (Stopdesk)' : 'Bureau (Stopdesk)')
-                              : (l10n.isArabic ? 'منزل' : 'Domicile'),
+                              ? (l10n.isArabic ? 'Ù…ÙƒØªØ¨ (Stopdesk)' : 'Bureau (Stopdesk)')
+                              : (l10n.isArabic ? 'Ù…Ù†Ø²Ù„' : 'Domicile'),
                         ),
                         _InfoRow(
                           icon: Icons.payments_rounded,
@@ -534,7 +534,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                         _InfoRow(
                           icon: Icons.qr_code_2_rounded,
-                          label: l10n.isArabic ? 'رقم التتبع' : 'Suivi',
+                          label: l10n.isArabic ? 'Ø±Ù‚Ù… Ø§Ù„ØªØªØ¨Ø¹' : 'Suivi',
                           value: order.trackingNumber.isEmpty ? '-' : order.trackingNumber,
                           isLast: true,
                         ),
@@ -555,13 +555,13 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l10n.isArabic ? 'الدفع عند الاستلام — مستحق عند شركة التوصيل' : 'COD — dû par la société de livraison',
+                                l10n.isArabic ? 'Ø§Ù„Ø¯ÙØ¹ Ø¹Ù†Ø¯ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… â€” Ù…Ø³ØªØ­Ù‚ Ø¹Ù†Ø¯ Ø´Ø±ÙƒØ© Ø§Ù„ØªÙˆØµÙŠÙ„' : 'COD â€” dÃ» par la sociÃ©tÃ© de livraison',
                                 style: texts.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 order.codPaidByCompany
-                                    ? (l10n.isArabic ? 'تم استلام المبلغ من الشركة' : 'Payé par la société')
-                                    : (l10n.isArabic ? 'لم يُستلم بعد' : 'Non reçu'),
+                                    ? (l10n.isArabic ? 'ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ù…Ø¨Ù„Øº Ù…Ù† Ø§Ù„Ø´Ø±ÙƒØ©' : 'PayÃ© par la sociÃ©tÃ©')
+                                    : (l10n.isArabic ? 'Ù„Ù… ÙŠÙØ³ØªÙ„Ù… Ø¨Ø¹Ø¯' : 'Non reÃ§u'),
                                 style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                             ],
@@ -587,8 +587,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           label: Text(
                             _order?.status == OrderStatus.newOrder ||
                                     _order?.status == OrderStatus.noAnswer
-                                ? 'Créer expédition'
-                                : 'Nouvelle expédition',
+                                ? 'CrÃ©er expÃ©dition'
+                                : 'Nouvelle expÃ©dition',
                           ),
                         ),
                       ),

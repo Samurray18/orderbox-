@@ -15,7 +15,7 @@ import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Analytics — parity with the web dashboard.analytics page.
+/// Analytics â€” parity with the web dashboard.analytics page.
 /// Computed entirely from the local store (works offline).
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -72,7 +72,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         last7.isEmpty ? 0.0 : delivered7d / last7.length * 100;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Column(
@@ -81,7 +81,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             Text(l10n.analyticsTitle),
             Text(
-              ar ? 'تحليلات المتجر' : 'Vue analytique de votre boutique',
+              ar ? 'ØªØ­Ù„ÙŠÙ„Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±' : 'Vue analytique de votre boutique',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -105,13 +105,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const spacing = AppSpacing.sm;
                 final cards = [
                   _KpiCard(
-                    label: ar ? 'الطلبات' : 'Commandes',
+                    label: ar ? 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'Commandes',
                     value: formatNumber(context, totalOrders),
                     icon: Icons.shopping_cart_rounded,
                     gradient: AppColors.primaryGradient,
                   ),
                   _KpiCard(
-                    label: ar ? 'المداخيل' : 'Chiffre d’affaires',
+                    label: ar ? 'Ø§Ù„Ù…Ø¯Ø§Ø®ÙŠÙ„' : 'Chiffre dâ€™affaires',
                     value: formatCurrency(context, revenue, compact: true),
                     icon: Icons.payments_rounded,
                     gradient: const LinearGradient(
@@ -119,7 +119,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'متوسط السلة' : 'Panier moyen',
+                    label: ar ? 'Ù…ØªÙˆØ³Ø· Ø§Ù„Ø³Ù„Ø©' : 'Panier moyen',
                     value: formatCurrency(context, avgOrder, compact: true),
                     icon: Icons.trending_up_rounded,
                     gradient: const LinearGradient(
@@ -127,7 +127,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'العملاء' : 'Clients',
+                    label: ar ? 'Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡' : 'Clients',
                     value: formatNumber(context, customerKeys.length),
                     icon: Icons.people_alt_rounded,
                     gradient: const LinearGradient(
@@ -135,7 +135,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'المنتجات' : 'Produits',
+                    label: ar ? 'Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª' : 'Produits',
                     value: formatNumber(context, products.length),
                     icon: Icons.inventory_2_rounded,
                     gradient: const LinearGradient(
@@ -143,7 +143,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'مُوصلات' : 'Livrées',
+                    label: ar ? 'Ù…ÙÙˆØµÙ„Ø§Øª' : 'LivrÃ©es',
                     value: formatNumber(context, deliveredOrders),
                     icon: Icons.check_circle_rounded,
                     gradient: const LinearGradient(
@@ -151,7 +151,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'قيد الانتظار' : 'En attente',
+                    label: ar ? 'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'En attente',
                     value: formatNumber(context, pendingOrders),
                     icon: Icons.hourglass_top_rounded,
                     gradient: const LinearGradient(
@@ -159,7 +159,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   _KpiCard(
-                    label: ar ? 'CA ٧ أيام' : 'CA 7 jours',
+                    label: ar ? 'CA Ù§ Ø£ÙŠØ§Ù…' : 'CA 7 jours',
                     value: formatCurrency(context, revenue7d, compact: true),
                     icon: Icons.calendar_month_rounded,
                     gradient: const LinearGradient(
@@ -189,7 +189,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          ar ? 'تطور المبيعات مع الوقت' : 'Revenus dans le temps',
+                          ar ? 'ØªØ·ÙˆØ± Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª Ù…Ø¹ Ø§Ù„ÙˆÙ‚Øª' : 'Revenus dans le temps',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -221,22 +221,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       Expanded(
                         child: _MiniStat(
                           label: ar
-                              ? 'إجمالي المداخيل (${_chartDays == _ChartDays.days90 ? '٩٠' : '٣٠'}d)'
+                              ? 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¯Ø§Ø®ÙŠÙ„ (${_chartDays == _ChartDays.days90 ? 'Ù©Ù ' : 'Ù£Ù '}d)'
                               : 'CA total (${_chartDays == _ChartDays.days90 ? '90' : '30'}j)',
                           value: formatCurrency(context, totalChartRevenue, compact: true),
                         ),
                       ),
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'الطلبات' : 'Commandes',
+                          label: ar ? 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'Commandes',
                           value: formatNumber(context, totalChartOrders),
                         ),
                       ),
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'أفضل يوم' : 'Meilleur jour',
+                          label: ar ? 'Ø£ÙØ¶Ù„ ÙŠÙˆÙ…' : 'Meilleur jour',
                           value: bestDay == null
-                              ? '—'
+                              ? 'â€”'
                               : formatDateShort(context, bestDay.day),
                         ),
                       ),
@@ -257,7 +257,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ar ? 'لقطة 7 أيام' : 'Instantané 7 jours',
+                    ar ? 'Ù„Ù‚Ø·Ø© 7 Ø£ÙŠØ§Ù…' : 'InstantanÃ© 7 jours',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -267,13 +267,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     children: [
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'الطلبات' : 'Commandes',
+                          label: ar ? 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'Commandes',
                           value: formatNumber(context, last7.length),
                         ),
                       ),
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'المداخيل' : 'CA',
+                          label: ar ? 'Ø§Ù„Ù…Ø¯Ø§Ø®ÙŠÙ„' : 'CA',
                           value: formatCurrency(context, revenue7d, compact: true),
                         ),
                       ),
@@ -284,13 +284,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     children: [
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'نسبة التوصيل' : 'Taux de livraison',
+                          label: ar ? 'Ù†Ø³Ø¨Ø© Ø§Ù„ØªÙˆØµÙŠÙ„' : 'Taux de livraison',
                           value: formatPercent(context, deliveryRate),
                         ),
                       ),
                       Expanded(
                         child: _MiniStat(
-                          label: ar ? 'سفارش / منتج' : 'Commandes / produit',
+                          label: ar ? 'Ø³ÙØ§Ø±Ø´ / Ù…Ù†ØªØ¬' : 'Commandes / produit',
                           value: products.isEmpty
                               ? '0'
                               : (totalOrders / math.max(1, products.length))

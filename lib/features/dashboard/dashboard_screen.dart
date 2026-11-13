@@ -73,7 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final selected = _selectedDay.clamp(0, series.length - 1);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: AppBackdrop(
         child: RefreshIndicator(
           onRefresh: _refresh,
@@ -119,6 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 AppHaptics.select();
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
+                                    fullscreenDialog: true,
                                     builder: (_) => const CreditsScreen(),
                                   ),
                                 );
@@ -730,7 +731,7 @@ class _RevenueBars extends StatelessWidget {
   final ValueChanged<int> onSelected;
 
   static const _en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  static const _ar = ['ثن', 'ثث', 'أر', 'خم', 'جم', 'سب', 'أحد'];
+  static const _ar = ['Ø«Ù†', 'Ø«Ø«', 'Ø£Ø±', 'Ø®Ù…', 'Ø¬Ù…', 'Ø³Ø¨', 'Ø£Ø­Ø¯'];
 
   @override
   Widget build(BuildContext context) {
@@ -844,7 +845,7 @@ class _RecentOrderTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${order.productName} · x${order.quantity}',
+                    '${order.productName} Â· x${order.quantity}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: texts.bodySmall?.copyWith(color: scheme.onSurfaceVariant),

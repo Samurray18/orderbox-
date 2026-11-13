@@ -9,7 +9,7 @@ import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// COD manager — parity with the web cod_collections / cod_transfers flow.
+/// COD manager â€” parity with the web cod_collections / cod_transfers flow.
 /// Collection statuses: in_transit | delivered | returned | collected.
 class CodManagerScreen extends StatefulWidget {
   const CodManagerScreen({super.key});
@@ -91,13 +91,13 @@ class _CodManagerScreenState extends State<CodManagerScreen> {
   String _statusLabel(String status, bool ar) {
     switch (status) {
       case 'collected':
-        return ar ? 'تم التحصيل' : 'Encaissé';
+        return ar ? 'ØªÙ… Ø§Ù„ØªØ­ØµÙŠÙ„' : 'EncaissÃ©';
       case 'delivered':
-        return ar ? 'وصلت' : 'Livrée';
+        return ar ? 'ÙˆØµÙ„Øª' : 'LivrÃ©e';
       case 'returned':
-        return ar ? 'مرتجعة' : 'Retournée';
+        return ar ? 'Ù…Ø±ØªØ¬Ø¹Ø©' : 'RetournÃ©e';
       default:
-        return ar ? 'في الطريق' : 'En transit';
+        return ar ? 'ÙÙŠ Ø§Ù„Ø·Ø±ÙŠÙ‚' : 'En transit';
     }
   }
 
@@ -115,17 +115,17 @@ class _CodManagerScreenState extends State<CodManagerScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           leading: const AppBackButton(),
-          title: Text(ar ? 'إدارة الدفع عند الاستلام' : 'Gestion COD'),
+          title: Text(ar ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¯ÙØ¹ Ø¹Ù†Ø¯ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù…' : 'Gestion COD'),
           bottom: TabBar(
             indicatorColor: scheme.primary,
             labelColor: scheme.primary,
             unselectedLabelColor: scheme.onSurfaceVariant,
             tabs: [
-              Tab(text: ar ? 'التحصيلات' : 'Encaissements'),
-              Tab(text: ar ? 'التحويلات' : 'Transferts'),
+              Tab(text: ar ? 'Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª' : 'Encaissements'),
+              Tab(text: ar ? 'Ø§Ù„ØªØ­ÙˆÙŠÙ„Ø§Øª' : 'Transferts'),
             ],
           ),
         ),
@@ -245,7 +245,7 @@ class _CollectionsTab extends StatelessWidget {
           children: [
             Expanded(
               child: _StatTile(
-                label: ar ? 'مُحصَّل' : 'Collecté',
+                label: ar ? 'Ù…ÙØ­ØµÙŽÙ‘Ù„' : 'CollectÃ©',
                 value: collected,
                 color: AppColors.mintDeep,
                 icon: Icons.savings_rounded,
@@ -254,7 +254,7 @@ class _CollectionsTab extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _StatTile(
-                label: ar ? 'قيد الانتظار' : 'En attente',
+                label: ar ? 'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'En attente',
                 value: pending,
                 color: AppColors.amber,
                 icon: Icons.hourglass_top_rounded,
@@ -271,7 +271,7 @@ class _CollectionsTab extends StatelessWidget {
               icon: Icons.storefront_rounded,
               title: 'Aucun versement COD',
               body:
-                  'Les collections apparaissent dès que des colis parviennent à la livraison.',
+                  'Les collections apparaissent dÃ¨s que des colis parviennent Ã  la livraison.',
             ),
           )
         else
@@ -316,7 +316,7 @@ class _CollectionCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  (row['customer_name'] ?? '—').toString(),
+                  (row['customer_name'] ?? 'â€”').toString(),
                   style: theme.textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis,
@@ -343,7 +343,7 @@ class _CollectionCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${(row['delivery_company'] ?? '').toString()} · '
+                  '${(row['delivery_company'] ?? '').toString()} Â· '
                   '${(row['tracking_number'] ?? '').toString()}',
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -395,7 +395,7 @@ class _TransfersTab extends StatelessWidget {
       ),
       children: [
         _StatTile(
-          label: ar ? 'محوّل إلى الورش' : 'Transféré',
+          label: ar ? 'Ù…Ø­ÙˆÙ‘Ù„ Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ±Ø´' : 'TransfÃ©rÃ©',
           value: transferred,
           color: Theme.of(context).colorScheme.primary,
           icon: Icons.currency_exchange_rounded,
@@ -408,7 +408,7 @@ class _TransfersTab extends StatelessWidget {
               compact: true,
               icon: Icons.currency_exchange_rounded,
               title: 'Aucun transfert',
-              body: 'Les versements de votre société de livraison apparaîtront ici.',
+              body: 'Les versements de votre sociÃ©tÃ© de livraison apparaÃ®tront ici.',
             ),
           )
         else
@@ -439,7 +439,7 @@ class _TransfersTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          (row['delivery_company'] ?? '—').toString(),
+                          (row['delivery_company'] ?? 'â€”').toString(),
                           style: Theme.of(context)
                               .textTheme
                               .titleSmall
@@ -449,7 +449,7 @@ class _TransfersTab extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${dateText(row['transfer_date'])}'
-                          '${((row['reference'] ?? '').toString().isNotEmpty) ? ' · ${(row['reference'])}' : ''}',
+                          '${((row['reference'] ?? '').toString().isNotEmpty) ? ' Â· ${(row['reference'])}' : ''}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(context)
                                     .colorScheme

@@ -14,7 +14,7 @@ import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_backdrop.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Delivery map — Algeria wilayas.
+/// Delivery map â€” Algeria wilayas.
 ///
 /// Visual parity with the web "delivery map" page: wilayas coloured by
 /// order volume, distance from the selected origin wilaya, and the
@@ -79,7 +79,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
     if (a == b) return 0;
     final pa = kAlgeriaWilayaShapes[a - 1];
     final pb = kAlgeriaWilayaShapes[b - 1];
-    // 1000 map units ≈ 1950 km of longitude span at Algeria's latitude.
+    // 1000 map units â‰ˆ 1950 km of longitude span at Algeria's latitude.
     const scale = 1.95;
     final dx = (pa.cx - pb.cx) * scale;
     final dy = (pa.cy - pb.cy) * scale;
@@ -112,16 +112,16 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
     final office = store.shippingFee(wKey, 'office');
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(ar ? 'خريطة التوصيل' : 'Carte des livraisons'),
+            Text(ar ? 'Ø®Ø±ÙŠØ·Ø© Ø§Ù„ØªÙˆØµÙŠÙ„' : 'Carte des livraisons'),
             Text(
-              ar ? 'الطلبات حسب الولاية' : 'Commandes par wilaya',
+              ar ? 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø­Ø³Ø¨ Ø§Ù„ÙˆÙ„Ø§ÙŠØ©' : 'Commandes par wilaya',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -182,7 +182,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                ar ? 'الولاية' : 'Wilaya',
+                                ar ? 'Ø§Ù„ÙˆÙ„Ø§ÙŠØ©' : 'Wilaya',
                                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
@@ -203,7 +203,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                ar ? 'الطلبات' : 'Commandes',
+                                ar ? 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª' : 'Commandes',
                                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
@@ -223,14 +223,14 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                ar ? 'المسافة' : 'Distance',
+                                ar ? 'Ø§Ù„Ù…Ø³Ø§ÙØ©' : 'Distance',
                                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
                               ),
                               Text(
                                 _origin == _selected
-                                    ? '—'
+                                    ? 'â€”'
                                     : '${distanceKm.toStringAsFixed(0)} km',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w800,
@@ -248,7 +248,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                             size: 16, color: scheme.onSurfaceVariant),
                         const SizedBox(width: 6),
                         Text(
-                          '${ar ? 'من' : 'Depuis'}: ',
+                          '${ar ? 'Ù…Ù†' : 'Depuis'}: ',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -265,7 +265,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                                   DropdownMenuItem(
                                     value: shape.code,
                                     child: Text(
-                                      '${shape.code.toString().padLeft(2, '0')} · ${shape.name}',
+                                      '${shape.code.toString().padLeft(2, '0')} Â· ${shape.name}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -287,7 +287,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                         Expanded(
                           child: _PricePill(
                             icon: Icons.home_rounded,
-                            label: ar ? 'إلى المنازل' : 'Livraison domicile',
+                            label: ar ? 'Ø¥Ù„Ù‰ Ø§Ù„Ù…Ù†Ø§Ø²Ù„' : 'Livraison domicile',
                             value: formatCurrency(context, home, compact: true),
                           ),
                         ),
@@ -295,7 +295,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                         Expanded(
                           child: _PricePill(
                             icon: Icons.store_rounded,
-                            label: ar ? 'للمكتب' : 'Stop desk',
+                            label: ar ? 'Ù„Ù„Ù…ÙƒØªØ¨' : 'Stop desk',
                             value: formatCurrency(context, office, compact: true),
                           ),
                         ),
@@ -305,7 +305,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
                     TextButton.icon(
                       onPressed: () => _openInGoogleMaps(selected.name),
                       icon: const Icon(Icons.open_in_new_rounded, size: AppSizes.iconSm),
-                      label: Text(ar ? 'فتح في Google Maps' : 'Ouvrir dans Google Maps'),
+                      label: Text(ar ? 'ÙØªØ­ ÙÙŠ Google Maps' : 'Ouvrir dans Google Maps'),
                     ),
                   ],
                 ),

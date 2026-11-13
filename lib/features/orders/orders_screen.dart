@@ -146,7 +146,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           RefreshIndicator(
@@ -318,7 +318,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           onPressed: () => _exportCsv(filtered),
                           icon: const Icon(Icons.download_rounded),
                           label: Text(
-                            l10n.isArabic ? 'تصدير CSV' : 'Exporter les commandes (CSV)',
+                            l10n.isArabic ? 'ØªØµØ¯ÙŠØ± CSV' : 'Exporter les commandes (CSV)',
                           ),
                         ),
                       ),

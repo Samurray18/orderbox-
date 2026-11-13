@@ -68,7 +68,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final products = store.products;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -494,7 +494,7 @@ class _StockPill extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.xxs + 2),
           Text(
-            '$label · $stock',
+            '$label Â· $stock',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.w600,

@@ -12,7 +12,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/soft_card.dart';
 
-/// Profit & operating expenses — parity with the web dashboard money page.
+/// Profit & operating expenses â€” parity with the web dashboard money page.
 /// Expense categories: ads | packaging | salary | rent | software | other.
 class ProfitScreen extends StatefulWidget {
   const ProfitScreen({super.key});
@@ -29,28 +29,28 @@ class _ProfitScreenState extends State<ProfitScreen> {
   String _categoryLabel(String category, bool ar) {
     switch (category) {
       case 'ads':
-        return ar ? 'إعلانات' : 'Publicité';
+        return ar ? 'Ø¥Ø¹Ù„Ø§Ù†Ø§Øª' : 'PublicitÃ©';
       case 'packaging':
-        return ar ? 'تغليف' : 'Emballage';
+        return ar ? 'ØªØºÙ„ÙŠÙ' : 'Emballage';
       case 'salary':
-        return ar ? 'رواتب' : 'Salaires';
+        return ar ? 'Ø±ÙˆØ§ØªØ¨' : 'Salaires';
       case 'rent':
-        return ar ? 'إيجار' : 'Loyer';
+        return ar ? 'Ø¥ÙŠØ¬Ø§Ø±' : 'Loyer';
       case 'software':
-        return ar ? 'برامج' : 'Logiciels';
+        return ar ? 'Ø¨Ø±Ø§Ù…Ø¬' : 'Logiciels';
       default:
-        return ar ? 'أخرى' : 'Autre';
+        return ar ? 'Ø£Ø®Ø±Ù‰' : 'Autre';
     }
   }
 
   String _periodLabel(DashboardPeriod period, bool ar) {
     switch (period) {
       case DashboardPeriod.days7:
-        return ar ? '٧ أيام' : '7 jours';
+        return ar ? 'Ù§ Ø£ÙŠØ§Ù…' : '7 jours';
       case DashboardPeriod.days30:
-        return ar ? '٣٠ يوم' : '30 jours';
+        return ar ? 'Ù£Ù  ÙŠÙˆÙ…' : '30 jours';
       default:
-        return ar ? 'الكل' : 'Tout';
+        return ar ? 'Ø§Ù„ÙƒÙ„' : 'Tout';
     }
   }
 
@@ -88,8 +88,8 @@ class _ProfitScreenState extends State<ProfitScreen> {
             return AlertDialog(
               title: Text(
                 existing == null
-                    ? (ar ? 'مصروف جديد' : 'Nouvelle dépense')
-                    : (ar ? 'تعديل المصروف' : 'Modifier la dépense'),
+                    ? (ar ? 'Ù…ØµØ±ÙˆÙ Ø¬Ø¯ÙŠØ¯' : 'Nouvelle dÃ©pense')
+                    : (ar ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…ØµØ±ÙˆÙ' : 'Modifier la dÃ©pense'),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -99,7 +99,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: category,
                       decoration: InputDecoration(
-                        labelText: ar ? 'الفئة' : 'Catégorie',
+                        labelText: ar ? 'Ø§Ù„ÙØ¦Ø©' : 'CatÃ©gorie',
                         border: const OutlineInputBorder(),
                       ),
                       items: [
@@ -119,7 +119,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
                       controller: amountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: ar ? 'المبلغ (DA)' : 'Montant (DA)',
+                        labelText: ar ? 'Ø§Ù„Ù…Ø¨Ù„Øº (DA)' : 'Montant (DA)',
                         border: const OutlineInputBorder(),
                       ),
                     ),
@@ -153,7 +153,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
                     TextField(
                       controller: noteController,
                       decoration: InputDecoration(
-                        labelText: ar ? 'ملاحظة (اختياري)' : 'Note (optionnel)',
+                        labelText: ar ? 'Ù…Ù„Ø§Ø­Ø¸Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)' : 'Note (optionnel)',
                         border: const OutlineInputBorder(),
                       ),
                     ),
@@ -163,7 +163,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(ar ? 'إلغاء' : 'Annuler'),
+                  child: Text(ar ? 'Ø¥Ù„ØºØ§Ø¡' : 'Annuler'),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -198,10 +198,10 @@ class _ProfitScreenState extends State<ProfitScreen> {
                     AppHaptics.success();
                     showAppSnackBar(
                       context,
-                      ar ? 'تم الحفظ ✓' : 'Enregistré ✓',
+                      ar ? 'ØªÙ… Ø§Ù„Ø­ÙØ¸ âœ“' : 'EnregistrÃ© âœ“',
                     );
                   },
-                  child: Text(ar ? 'حفظ' : 'Enregistrer'),
+                  child: Text(ar ? 'Ø­ÙØ¸' : 'Enregistrer'),
                 ),
               ],
             );
@@ -216,7 +216,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
     final store = context.read<AppStore>();
     store.deleteExpense(expense);
     AppHaptics.select();
-    showAppSnackBar(context, isArabicContext(context) ? 'تم الحذف' : 'Supprimé');
+    showAppSnackBar(context, isArabicContext(context) ? 'ØªÙ… Ø§Ù„Ø­Ø°Ù' : 'SupprimÃ©');
   }
 
   @override
@@ -231,15 +231,15 @@ class _ProfitScreenState extends State<ProfitScreen> {
     final margin = revenue > 0 ? netProfit / revenue * 100 : 0.0;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: Text(ar ? 'الأرباح' : 'Profit & dépenses'),
+        title: Text(ar ? 'Ø§Ù„Ø£Ø±Ø¨Ø§Ø­' : 'Profit & dÃ©penses'),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEditExpense(),
         icon: const Icon(Icons.add_rounded),
-        label: Text(ar ? 'مصروف' : 'Dépense'),
+        label: Text(ar ? 'Ù…ØµØ±ÙˆÙ' : 'DÃ©pense'),
       ),
       body: AppBackdrop(
         child: ListView(
@@ -272,7 +272,7 @@ class _ProfitScreenState extends State<ProfitScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ar ? 'صافي الربح' : 'Bénéfice net',
+                  ar ? 'ØµØ§ÙÙŠ Ø§Ù„Ø±Ø¨Ø­' : 'BÃ©nÃ©fice net',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -288,22 +288,22 @@ class _ProfitScreenState extends State<ProfitScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '${ar ? 'الهامش' : 'Marge'}: ${formatPercent(context, margin)}',
+                  '${ar ? 'Ø§Ù„Ù‡Ø§Ù…Ø´' : 'Marge'}: ${formatPercent(context, margin)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                 ),
                 const Divider(height: AppSpacing.lg),
                 _MoneyRow(
-                  label: ar ? 'المبيعات (مُوصلات)' : 'Chiffre d’affaires',
+                  label: ar ? 'Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª (Ù…ÙÙˆØµÙ„Ø§Øª)' : 'Chiffre dâ€™affaires',
                   value: revenue,
                 ),
                 _MoneyRow(
-                  label: ar ? 'ربح المنتجات' : 'Marge produits',
+                  label: ar ? 'Ø±Ø¨Ø­ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª' : 'Marge produits',
                   value: productProfit,
                 ),
                 _MoneyRow(
-                  label: ar ? 'المصاريف' : 'Dépenses',
+                  label: ar ? 'Ø§Ù„Ù…ØµØ§Ø±ÙŠÙ' : 'DÃ©penses',
                   value: -expensesTotal,
                   negative: true,
                 ),
@@ -312,18 +312,18 @@ class _ProfitScreenState extends State<ProfitScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           SectionHeader(
-            title: ar ? 'المصاريف' : 'Dépenses',
+            title: ar ? 'Ø§Ù„Ù…ØµØ§Ø±ÙŠÙ' : 'DÃ©penses',
             subtitle: '${_expensesInPeriod.length} '
-                '${ar ? 'عنصر' : 'entrées'}',
+                '${ar ? 'Ø¹Ù†ØµØ±' : 'entrÃ©es'}',
           ),
           const SizedBox(height: AppSpacing.sm),
           if (_expensesInPeriod.isEmpty)
             const EmptyState(
               compact: true,
               icon: Icons.receipt_long_rounded,
-              title: 'Aucune dépense',
+              title: 'Aucune dÃ©pense',
               body:
-                  'Ajoutez vos dépenses (publicité, emballage…) pour un vrai bénéfice net.',
+                  'Ajoutez vos dÃ©penses (publicitÃ©, emballageâ€¦) pour un vrai bÃ©nÃ©fice net.',
             )
           else
             for (final expense in _expensesInPeriod) ...[
@@ -450,7 +450,7 @@ class _ExpenseRow extends StatelessWidget {
           IconButton(
             onPressed: onEdit,
             icon: const Icon(Icons.edit_outlined, size: 20),
-            tooltip: 'Éditer',
+            tooltip: 'Ã‰diter',
           ),
           IconButton(
             onPressed: onDelete,

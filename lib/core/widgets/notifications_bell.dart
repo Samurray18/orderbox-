@@ -36,6 +36,7 @@ class NotificationsBell extends StatelessWidget {
             AppHaptics.select();
             Navigator.of(context).push(
               MaterialPageRoute(
+                fullscreenDialog: true,
                 builder: (_) => const NotificationsScreen(),
               ),
             );
